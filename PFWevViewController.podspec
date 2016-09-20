@@ -28,7 +28,7 @@ Pod::Spec.new do |s|
                    A light-weight webview controller using WKWebView. It contains a progress bar and can estimate loading time.
                    DESC
 
-  s.homepage     = "https://github.com/PerfectFreeze/PFWevViewController"
+  s.homepage     = "https://github.com/PerfectFreeze/PFWebViewController"
   # s.screenshots  = "www.example.com/screenshots_1.gif", "www.example.com/screenshots_2.gif"
 
 
@@ -56,7 +56,7 @@ Pod::Spec.new do |s|
   s.author             = { "Cee" => "cee@chu2byo.com" }
   # Or just: s.author    = "Cee"
   # s.authors            = { "Cee" => "cee@chu2byo.com" }
-  s.social_media_url   = "http://twitter.com/ceecirno"
+  s.social_media_url   = "https://twitter.com/ceecirno"
 
   # ――― Platform Specifics ――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
   #
