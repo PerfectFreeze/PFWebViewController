@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="11201" systemVersion="15G1004" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11161"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="PFWebViewToolBar">
+            <rect key="frame" x="0.0" y="0.0" width="375" height="50.5"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="5iG-AN-WFT">
+                    <color key="backgroundColor" red="0.91764705879999997" green="0.92941176469999998" blue="0.94901960780000005" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="0.5" id="2Ah-SK-xsv"/>
+                    </constraints>
+                </view>
+                <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="BsK-Sa-L9X">
+                    <subviews>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="HD6-Yi-Ywl">
+                            <connections>
+                                <action selector="close:" destination="iN0-l3-epB" eventType="touchUpInside" id="jIs-c3-K7U"/>
+                            </connections>
+                        </button>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="dFD-b5-43e">
+                            <state key="normal" image="PFWebViewController.bundle/icon_back"/>
+                            <connections>
+                                <action selector="goBack:" destination="iN0-l3-epB" eventType="touchUpInside" id="2jg-pj-KY7"/>
+                            </connections>
+                        </button>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tm1-FX-FwU">
+                            <state key="normal" image="PFWebViewController.bundle/icon_next"/>
+                            <connections>
+                                <action selector="goForward:" destination="iN0-l3-epB" eventType="touchUpInside" id="zVb-cL-Xnb"/>
+                            </connections>
+                        </button>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="g4d-zs-zgE">
+                            <state key="normal" image="PFWebViewController.bundle/icon_safari"/>
+                            <connections>
+                                <action selector="openInSafari:" destination="iN0-l3-epB" eventType="touchUpInside" id="evd-Oz-A8U"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="50" id="PDh-3X-jn1"/>
+                        <constraint firstItem="tm1-FX-FwU" firstAttribute="width" secondItem="HD6-Yi-Ywl" secondAttribute="width" id="SI2-SQ-nYH"/>
+                        <constraint firstItem="HD6-Yi-Ywl" firstAttribute="centerY" secondItem="BsK-Sa-L9X" secondAttribute="centerY" id="ety-bf-nh2"/>
+                        <constraint firstItem="dFD-b5-43e" firstAttribute="width" secondItem="HD6-Yi-Ywl" secondAttribute="width" id="hV5-Xd-m7U"/>
+                        <constraint firstItem="g4d-zs-zgE" firstAttribute="height" secondItem="HD6-Yi-Ywl" secondAttribute="height" id="j1e-l7-zB6"/>
+                        <constraint firstItem="g4d-zs-zgE" firstAttribute="width" secondItem="HD6-Yi-Ywl" secondAttribute="width" id="k1Y-5H-WrD"/>
+                        <constraint firstItem="tm1-FX-FwU" firstAttribute="height" secondItem="HD6-Yi-Ywl" secondAttribute="height" id="ocV-AV-pD5"/>
+                        <constraint firstItem="dFD-b5-43e" firstAttribute="height" secondItem="HD6-Yi-Ywl" secondAttribute="height" id="t5G-xA-Q36"/>
+                    </constraints>
+                </stackView>
+            </subviews>
+            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <constraints>
+                <constraint firstItem="BsK-Sa-L9X" firstAttribute="centerX" secondItem="iN0-l3-epB" secondAttribute="centerX" id="AQE-v9-yjM"/>
+                <constraint firstItem="BsK-Sa-L9X" firstAttribute="width" secondItem="iN0-l3-epB" secondAttribute="width" id="FPo-0E-lYo"/>
+                <constraint firstAttribute="bottom" secondItem="BsK-Sa-L9X" secondAttribute="bottom" id="KRE-xb-DMk"/>
+                <constraint firstItem="5iG-AN-WFT" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="cqB-do-BcO"/>
+                <constraint firstItem="5iG-AN-WFT" firstAttribute="width" secondItem="BsK-Sa-L9X" secondAttribute="width" id="e4e-hs-gDo"/>
+                <constraint firstItem="5iG-AN-WFT" firstAttribute="centerX" secondItem="iN0-l3-epB" secondAttribute="centerX" id="s01-I2-qfy"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="backBtn" destination="dFD-b5-43e" id="3jz-1Q-TAL"/>
+                <outlet property="closeBtn" destination="HD6-Yi-Ywl" id="5YS-2G-KCS"/>
+                <outlet property="forwardBtn" destination="tm1-FX-FwU" id="lEQ-3h-nus"/>
+                <outlet property="openInSafariBtn" destination="g4d-zs-zgE" id="Vpd-Rs-33V"/>
+            </connections>
+            <point key="canvasLocation" x="-122.5" y="-331"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="PFWebViewController.bundle/icon_back" width="14" height="14"/>
+        <image name="PFWebViewController.bundle/icon_next" width="14" height="14"/>
+        <image name="PFWebViewController.bundle/icon_safari" width="14" height="14"/>
+    </resources>
+</document>
