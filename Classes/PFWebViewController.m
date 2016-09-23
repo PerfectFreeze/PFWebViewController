@@ -11,7 +11,6 @@
 #import "PFWebViewToolBar.h"
 #import <WebKit/WebKit.h>
 
-#define SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(v)  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedAscending)
 #define SCREENWIDTH [UIScreen mainScreen].bounds.size.width
 #define SCREENHEIGHT [UIScreen mainScreen].bounds.size.height
 
@@ -198,12 +197,12 @@
 }
 
 - (void)webViewToolbarOpenInSafari:(PFWebViewToolBar *)toolbar {
-    if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"10.0")) {
-        // Introduced in iOS 10
-        [[UIApplication sharedApplication] openURL:self.webView.URL options:@{} completionHandler:nil];
-    } else {
-        [[UIApplication sharedApplication] openURL:self.webView.URL];
-    }
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+    // Introduced in iOS 10
+    [[UIApplication sharedApplication] openURL:self.webView.URL options:@{} completionHandler:nil];
+#else
+    [[UIApplication sharedApplication] openURL:self.webView.URL];
+#endif
 }
 
 - (void)webViewToolbarClose:(PFWebViewToolBar *)toolbar {
