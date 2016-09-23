@@ -28,7 +28,7 @@
 
 - (IBAction)btnPressed:(UIButton *)sender {
     PFWebViewController *webVC = [[PFWebViewController alloc] initWithURLString:@"https://github.com"];
-    [webVC setProgressBarColor:[UIColor redColor]];
+    [webVC setProgressBarColor:[UIColor redColor]]; // Default is black
     
     [self presentViewController:webVC animated:YES completion:nil];
 }

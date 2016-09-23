@@ -10,8 +10,10 @@
 #import <QuartzCore/QuartzCore.h>
 
 #define SCREENWIDTH [UIScreen mainScreen].bounds.size.width
+#define SCREENHEIGHT [UIScreen mainScreen].bounds.size.height
 
 @interface PFWebViewNavigationHeader ()
+@property (nonatomic, assign) CGFloat offset;
 @property (nonatomic, strong) UIView *bottomLine;
 @property (nonatomic, strong) UILabel *urlLabel;
 @end
@@ -19,11 +21,11 @@
 @implementation PFWebViewNavigationHeader
 
 - (id)initWithURL:(NSURL *)url {
-    self = [super initWithFrame:CGRectMake(0, 0, SCREENWIDTH, 40.5f)];
+    self.offset = SCREENWIDTH < SCREENHEIGHT ? 20.f : 0.f;
+    self = [super initWithFrame:CGRectMake(0, 0, SCREENWIDTH, 20.5f + self.offset)];
     if (self) {
         self.urlLabel.text = [url host];
         [self setup];
-
     }
     return self;
 }
@@ -38,9 +40,17 @@
     [self addSubview:self.bottomLine];
 }
 
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    self.offset = SCREENWIDTH < SCREENHEIGHT ? 20.f : 0.f;
+    self.frame = CGRectMake(0, 0, SCREENWIDTH, 20.5f + self.offset);
+    self.urlLabel.frame = CGRectMake(0, self.offset, SCREENWIDTH, 20);
+    self.bottomLine.frame = CGRectMake(0, 20 + self.offset, SCREENWIDTH, .5f);
+}
+
 - (UILabel *)urlLabel {
     if (!_urlLabel) {
-        _urlLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 20, SCREENWIDTH, 20)];
+        _urlLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, self.offset, SCREENWIDTH, 20)];
         _urlLabel.textAlignment = NSTextAlignmentCenter;
         _urlLabel.font = [UIFont systemFontOfSize:11];
         _urlLabel.numberOfLines = 1;
@@ -50,7 +60,7 @@
 
 - (UIView *)bottomLine {
     if (!_bottomLine) {
-        _bottomLine = [[UIView alloc] initWithFrame:CGRectMake(0, 40, SCREENWIDTH, .5f)];
+        _bottomLine = [[UIView alloc] initWithFrame:CGRectMake(0, 20 + self.offset, SCREENWIDTH, .5f)];
         _bottomLine.backgroundColor = [UIColor colorWithRed:234.f/255.f green:237.f/255.f blue:242.f/255.f alpha:1.f];
     }
     return _bottomLine;

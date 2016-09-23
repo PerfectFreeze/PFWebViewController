@@ -12,9 +12,12 @@
 #import <WebKit/WebKit.h>
 
 #define SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(v)  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedAscending)
+#define SCREENWIDTH [UIScreen mainScreen].bounds.size.width
+#define SCREENHEIGHT [UIScreen mainScreen].bounds.size.height
 
 @interface PFWebViewController () <PFWebViewToolBarDelegate>
 
+@property (nonatomic, assign) CGFloat offset;
 @property (nonatomic, strong) WKWebView *webView;
 @property (nonatomic, strong) PFWebViewNavigationHeader *navigationHeader;
 @property (nonatomic, strong) PFWebViewToolBar *toolbar;
@@ -27,6 +30,9 @@
 #pragma mark - Life Cycle
 
 - (id)initWithURL:(NSURL *)url {
+    
+    self.offset = SCREENWIDTH < SCREENHEIGHT ? 20.f : 0.f;
+    
     self = [super init];
     if (self) {
         self.url = url;
@@ -36,6 +42,9 @@
 }
 
 - (id)initWithURLString:(NSString *)urlString {
+    
+    self.offset = SCREENWIDTH < SCREENHEIGHT ? 20.f : 0.f;
+    
     self = [super init];
     if (self) {
         self.url = [NSURL URLWithString:urlString];
@@ -80,11 +89,22 @@
     [self.webView removeObserver:self forKeyPath:@"URL"];
 }
 
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    
+    self.offset = SCREENWIDTH < SCREENHEIGHT ? 20.f : 0.f;
+    
+    self.webView.frame = CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset);
+    self.navigationHeader.frame = CGRectMake(0, 0, SCREENWIDTH, self.offset + 20.5f);
+    self.toolbar.frame = CGRectMake(0, SCREENHEIGHT - 50.5f, SCREENWIDTH, 50.5f);
+    self.progressView.frame = CGRectMake(0, 19 + self.offset, SCREENWIDTH, 2);
+}
+
 #pragma mark - Lazy Initialize
 
 - (WKWebView *)webView {
     if (!_webView) {
-        _webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, 40.5f, self.view.frame.size.width, self.view.frame.size.height - 91.f)];
+        _webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset)];
         _webView.allowsBackForwardNavigationGestures = YES;
     }
     return _webView;
@@ -99,7 +119,7 @@
 
 - (PFWebViewToolBar *)toolbar {
     if (!_toolbar) {
-        _toolbar = [[PFWebViewToolBar alloc] initWithFrame:CGRectMake(0, self.view.frame.size.height - 50.5f, self.view.frame.size.width, 50.5f)];
+        _toolbar = [[PFWebViewToolBar alloc] initWithFrame:CGRectMake(0, SCREENHEIGHT - 50.5f, SCREENWIDTH, 50.5f)];
         _toolbar.delegate = self;
     }
     return _toolbar;
@@ -107,7 +127,7 @@
 
 - (UIProgressView *)progressView {
     if (!_progressView) {
-        _progressView = [[UIProgressView alloc] initWithFrame:CGRectMake(0, 39, self.view.frame.size.width, 2)];
+        _progressView = [[UIProgressView alloc] initWithFrame:CGRectMake(0, self.offset + 19.f, SCREENWIDTH, 2)];
         _progressView.trackTintColor = [UIColor clearColor];
         _progressView.progressTintColor = self.progressBarColor;
     }
