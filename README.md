@@ -2,19 +2,38 @@
 
 A light-weight webview controller using WKWebView. Only supports iOS 9 and above.
 
-## Screenshot
+Easy use and less memory consuming than [RxWebViewController](https://github.com/Roxasora/RxWebViewController).
 
-To be written.
+## Demo
+
++ [Present Demo](Demo/Present.mov)
++ [Push Demo](Demo/Push.mov)
+
+You can open the sample project and take a look by changing storyboard's main entry point.
 
 ## Installation
 
 ### Using Carthage
 
-To be written.
+Add `PFWebViewController` to your `Cartfile`:
+
+```
+github "PerfectFreeze/PFWebViewController"
+```
+
+Run `carthage` to build this framework.
+
+Add `PFWebViewController.framework` to your Xcode project.
 
 ### Using CocoaPods
 
-To be written.
+Add `PFWebViewController` to your `Podfile`:
+
+```ruby
+pod 'PFWebViewController'
+```
+
+Run `pod install` to install this framework.
 
 ### Manually
 
@@ -22,11 +41,23 @@ Drag `Classes` folder to your project.
 
 ## Usage 
 
-To be written.
+```objective-c
+// Init with a string
+PFWebViewController *webVC = [[PFWebViewController alloc] initWithURLString:@"https://github.com"];
 
-## TODO
+// Or with an URL
+NSURL *url = ...;
+PFWebViewController *webVC = [[PFWebViewController alloc] initWithURL:url];
 
-To be written.
+// Optional: Set Progressbar's Color, default is black
+[webVC setProgressBarColor:[UIColor redColor]];
+    
+// Present in a single view
+[self presentViewController:webVC animated:YES completion:nil];
+
+// Or push in a navigationController
+[self.navigationController pushViewController:webVC animated:YES];
+```
 
 ## License
 
