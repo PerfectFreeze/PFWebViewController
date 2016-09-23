@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		921A45CA1D95870E0040BE3B /* PFWebViewController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 921A45C31D95870E0040BE3B /* PFWebViewController.framework */; };
+		921A45CB1D95870E0040BE3B /* PFWebViewController.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 921A45C31D95870E0040BE3B /* PFWebViewController.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		921A45D01D9587300040BE3B /* PFWebViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 927D6EA51D9127420066D7BC /* PFWebViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		921A45D11D9587440040BE3B /* PFWebViewNavigationHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 927D6EA71D9127420066D7BC /* PFWebViewNavigationHeader.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		921A45D21D9587440040BE3B /* PFWebViewToolBar.h in Headers */ = {isa = PBXBuildFile; fileRef = 927D6EA91D9127420066D7BC /* PFWebViewToolBar.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		921A45D31D95875A0040BE3B /* PFWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 927D6EA61D9127420066D7BC /* PFWebViewController.m */; };
+		921A45D41D95875A0040BE3B /* PFWebViewNavigationHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 927D6EA81D9127420066D7BC /* PFWebViewNavigationHeader.m */; };
+		921A45D51D95875A0040BE3B /* PFWebViewToolBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 927D6EAA1D9127420066D7BC /* PFWebViewToolBar.m */; };
+		921A45D61D9587600040BE3B /* PFWebViewController.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 927D6EA41D9127420066D7BC /* PFWebViewController.bundle */; };
 		927D6EAC1D9127420066D7BC /* PFWebViewController.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 927D6EA41D9127420066D7BC /* PFWebViewController.bundle */; };
 		927D6EAD1D9127420066D7BC /* PFWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 927D6EA61D9127420066D7BC /* PFWebViewController.m */; };
 		927D6EAE1D9127420066D7BC /* PFWebViewNavigationHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 927D6EA81D9127420066D7BC /* PFWebViewNavigationHeader.m */; };
@@ -19,7 +28,34 @@
 		928771931D8FDAF400491C20 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 928771911D8FDAF400491C20 /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		921A45C81D95870E0040BE3B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 928771781D8FDAF400491C20 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 921A45C21D95870E0040BE3B;
+			remoteInfo = PFWebViewControllerFramework;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		921A45CF1D95870E0040BE3B /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				921A45CB1D95870E0040BE3B /* PFWebViewController.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		921A45C31D95870E0040BE3B /* PFWebViewController.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PFWebViewController.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		921A45C51D95870E0040BE3B /* PFWebViewControllerFramework.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PFWebViewControllerFramework.h; sourceTree = "<group>"; };
+		921A45C61D95870E0040BE3B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		927D6EA41D9127420066D7BC /* PFWebViewController.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = PFWebViewController.bundle; sourceTree = "<group>"; };
 		927D6EA51D9127420066D7BC /* PFWebViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PFWebViewController.h; sourceTree = "<group>"; };
 		927D6EA61D9127420066D7BC /* PFWebViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PFWebViewController.m; sourceTree = "<group>"; };
@@ -41,16 +77,33 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		9287717D1D8FDAF400491C20 /* Frameworks */ = {
+		921A45BF1D95870E0040BE3B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9287717D1D8FDAF400491C20 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				921A45CA1D95870E0040BE3B /* PFWebViewController.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		921A45C41D95870E0040BE3B /* PFWebViewControllerFramework */ = {
+			isa = PBXGroup;
+			children = (
+				921A45C51D95870E0040BE3B /* PFWebViewControllerFramework.h */,
+				921A45C61D95870E0040BE3B /* Info.plist */,
+			);
+			path = PFWebViewControllerFramework;
+			sourceTree = "<group>";
+		};
 		927D6EA31D9127420066D7BC /* Classes */ = {
 			isa = PBXGroup;
 			children = (
@@ -71,6 +124,7 @@
 			children = (
 				927D6EA31D9127420066D7BC /* Classes */,
 				928771821D8FDAF400491C20 /* PFWebViewController */,
+				921A45C41D95870E0040BE3B /* PFWebViewControllerFramework */,
 				928771811D8FDAF400491C20 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -79,6 +133,7 @@
 			isa = PBXGroup;
 			children = (
 				928771801D8FDAF400491C20 /* PFWebViewController.app */,
+				921A45C31D95870E0040BE3B /* PFWebViewController.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -109,7 +164,38 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		921A45C01D95870E0040BE3B /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				921A45D01D9587300040BE3B /* PFWebViewController.h in Headers */,
+				921A45D11D9587440040BE3B /* PFWebViewNavigationHeader.h in Headers */,
+				921A45D21D9587440040BE3B /* PFWebViewToolBar.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
+		921A45C21D95870E0040BE3B /* PFWebViewControllerFramework */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 921A45CE1D95870E0040BE3B /* Build configuration list for PBXNativeTarget "PFWebViewControllerFramework" */;
+			buildPhases = (
+				921A45BE1D95870E0040BE3B /* Sources */,
+				921A45BF1D95870E0040BE3B /* Frameworks */,
+				921A45C01D95870E0040BE3B /* Headers */,
+				921A45C11D95870E0040BE3B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PFWebViewControllerFramework;
+			productName = PFWebViewControllerFramework;
+			productReference = 921A45C31D95870E0040BE3B /* PFWebViewController.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		9287717F1D8FDAF400491C20 /* PFWebViewController */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 928771971D8FDAF400491C20 /* Build configuration list for PBXNativeTarget "PFWebViewController" */;
@@ -117,10 +203,12 @@
 				9287717C1D8FDAF400491C20 /* Sources */,
 				9287717D1D8FDAF400491C20 /* Frameworks */,
 				9287717E1D8FDAF400491C20 /* Resources */,
+				921A45CF1D95870E0040BE3B /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				921A45C91D95870E0040BE3B /* PBXTargetDependency */,
 			);
 			name = PFWebViewController;
 			productName = PFWebViewController;
@@ -136,6 +224,11 @@
 				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = Cee;
 				TargetAttributes = {
+					921A45C21D95870E0040BE3B = {
+						CreatedOnToolsVersion = 8.0;
+						DevelopmentTeam = 37Y29WD9SV;
+						ProvisioningStyle = Automatic;
+					};
 					9287717F1D8FDAF400491C20 = {
 						CreatedOnToolsVersion = 8.0;
 						DevelopmentTeam = 37Y29WD9SV;
@@ -157,11 +250,20 @@
 			projectRoot = "";
 			targets = (
 				9287717F1D8FDAF400491C20 /* PFWebViewController */,
+				921A45C21D95870E0040BE3B /* PFWebViewControllerFramework */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		921A45C11D95870E0040BE3B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				921A45D61D9587600040BE3B /* PFWebViewController.bundle in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9287717E1D8FDAF400491C20 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -176,6 +278,16 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		921A45BE1D95870E0040BE3B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				921A45D31D95875A0040BE3B /* PFWebViewController.m in Sources */,
+				921A45D41D95875A0040BE3B /* PFWebViewNavigationHeader.m in Sources */,
+				921A45D51D95875A0040BE3B /* PFWebViewToolBar.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9287717C1D8FDAF400491C20 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -190,6 +302,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		921A45C91D95870E0040BE3B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 921A45C21D95870E0040BE3B /* PFWebViewControllerFramework */;
+			targetProxy = 921A45C81D95870E0040BE3B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		9287718C1D8FDAF400491C20 /* Main.storyboard */ = {
@@ -211,6 +331,52 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		921A45CC1D95870E0040BE3B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 37Y29WD9SV;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = PFWebViewControllerFramework/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				OTHER_CFLAGS = "-fembed-bitcode";
+				PRODUCT_BUNDLE_IDENTIFIER = io.Cee.PFWebViewControllerFramework;
+				PRODUCT_MODULE_NAME = PFWebViewController;
+				PRODUCT_NAME = PFWebViewController;
+				SKIP_INSTALL = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		921A45CD1D95870E0040BE3B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 37Y29WD9SV;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = PFWebViewControllerFramework/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				OTHER_CFLAGS = "-fembed-bitcode";
+				PRODUCT_BUNDLE_IDENTIFIER = io.Cee.PFWebViewControllerFramework;
+				PRODUCT_MODULE_NAME = PFWebViewController;
+				PRODUCT_NAME = PFWebViewController;
+				SKIP_INSTALL = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
 		928771951D8FDAF400491C20 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -330,6 +496,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		921A45CE1D95870E0040BE3B /* Build configuration list for PBXNativeTarget "PFWebViewControllerFramework" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				921A45CC1D95870E0040BE3B /* Debug */,
+				921A45CD1D95870E0040BE3B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		9287717B1D8FDAF400491C20 /* Build configuration list for PBXProject "PFWebViewController" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
