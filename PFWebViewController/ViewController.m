@@ -27,7 +27,9 @@
 }
 
 - (IBAction)btnPressed:(UIButton *)sender {
-    PFWebViewController *webVC = [[PFWebViewController alloc] initWithURLString:@"https://www.baidu.com"];
+    PFWebViewController *webVC = [[PFWebViewController alloc] initWithURLString:@"https://github.com"];
+    [webVC setProgressBarColor:[UIColor redColor]];
+    
     [self presentViewController:webVC animated:YES completion:nil];
 }
 

@@ -30,6 +30,7 @@
     self = [super init];
     if (self) {
         self.url = url;
+        self.progressBarColor = [UIColor blackColor];
     }
     return self;
 }
@@ -38,10 +39,10 @@
     self = [super init];
     if (self) {
         self.url = [NSURL URLWithString:urlString];
+        self.progressBarColor = [UIColor blackColor];
     }
     return self;
 }
-
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -108,7 +109,7 @@
     if (!_progressView) {
         _progressView = [[UIProgressView alloc] initWithFrame:CGRectMake(0, 39, self.view.frame.size.width, 2)];
         _progressView.trackTintColor = [UIColor clearColor];
-        _progressView.progressTintColor = [UIColor blackColor];
+        _progressView.progressTintColor = self.progressBarColor;
     }
     return _progressView;
 }
