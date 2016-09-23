@@ -14,7 +14,9 @@
 #define SCREENWIDTH [UIScreen mainScreen].bounds.size.width
 #define SCREENHEIGHT [UIScreen mainScreen].bounds.size.height
 
-@interface PFWebViewController () <PFWebViewToolBarDelegate>
+@interface PFWebViewController () <PFWebViewToolBarDelegate> {
+    BOOL isNavigationBarHidden;
+}
 
 @property (nonatomic, assign) CGFloat offset;
 @property (nonatomic, strong) WKWebView *webView;
@@ -54,6 +56,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+
     
     [self.view addSubview:self.navigationHeader];
     [self.view addSubview:self.toolbar];
@@ -72,20 +75,29 @@
     }
 }
 
-- (void)viewWillAppear:(BOOL)animated{
+- (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     [self.webView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:nil];
     [self.webView addObserver:self forKeyPath:@"canGoBack" options:NSKeyValueObservingOptionNew context:nil];
     [self.webView addObserver:self forKeyPath:@"canGoForward" options:NSKeyValueObservingOptionNew context:nil];
     [self.webView addObserver:self forKeyPath:@"URL" options:NSKeyValueObservingOptionNew context:nil];
+    
+    if (self.navigationController) {
+        isNavigationBarHidden = self.navigationController.navigationBar.hidden;
+        [self.navigationController setNavigationBarHidden:YES];
+    }
 }
 
-- (void)viewWillDisappear:(BOOL)animated{
+- (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     [self.webView removeObserver:self forKeyPath:@"estimatedProgress"];
     [self.webView removeObserver:self forKeyPath:@"canGoBack"];
     [self.webView removeObserver:self forKeyPath:@"canGoForward"];
     [self.webView removeObserver:self forKeyPath:@"URL"];
+    
+    if (self.navigationController) {
+        [self.navigationController setNavigationBarHidden:isNavigationBarHidden];
+    }
 }
 
 - (void)viewDidLayoutSubviews {
@@ -206,7 +218,12 @@
 }
 
 - (void)webViewToolbarClose:(PFWebViewToolBar *)toolbar {
-    [self dismissViewControllerAnimated:YES completion:nil];
+    if (self.navigationController) {
+        [self.navigationController popViewControllerAnimated:YES];
+    } else {
+        [self dismissViewControllerAnimated:YES completion:nil];
+    }
+    
 }
 
 @end

@@ -1,7 +1,6 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="11201" systemVersion="15G1004" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="11201" systemVersion="16A323" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
     <dependencies>
-        <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11161"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -22,7 +21,7 @@
                                 <constraints>
                                     <constraint firstAttribute="height" constant="30" id="CMH-rB-uBz"/>
                                 </constraints>
-                                <state key="normal" title="Push"/>
+                                <state key="normal" title="Present"/>
                                 <connections>
                                     <action selector="btnPressed:" destination="BYZ-38-t0r" eventType="touchUpInside" id="uHc-lE-iMt"/>
                                 </connections>
@@ -38,6 +37,60 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
+            <point key="canvasLocation" x="1079" y="177"/>
+        </scene>
+        <!--View Controller-->
+        <scene sceneID="lBc-FP-FqQ">
+            <objects>
+                <viewController id="kAL-Ke-Cw6" customClass="ViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="Hmr-hJ-fUw"/>
+                        <viewControllerLayoutGuide type="bottom" id="jK4-kL-ltT"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="8pE-HV-2zK">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="kl9-X4-iiV">
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="30" id="nKO-Yr-maA"/>
+                                </constraints>
+                                <state key="normal" title="Push"/>
+                                <connections>
+                                    <action selector="btnPressed:" destination="kAL-Ke-Cw6" eventType="touchUpInside" id="Q4Y-68-9oh"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="kl9-X4-iiV" firstAttribute="centerY" secondItem="8pE-HV-2zK" secondAttribute="centerY" id="0ZL-v7-qhJ"/>
+                            <constraint firstItem="kl9-X4-iiV" firstAttribute="centerX" secondItem="8pE-HV-2zK" secondAttribute="centerX" id="JpU-rS-HDG"/>
+                            <constraint firstItem="kl9-X4-iiV" firstAttribute="width" secondItem="8pE-HV-2zK" secondAttribute="width" id="gcI-OM-JLR"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="MRE-3C-SGO"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Tul-CM-go3" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1079.2" y="-560.86956521739137"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="1mo-cI-2QT">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="rmB-kz-hLy" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="f64-dU-7ZK">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="kAL-Ke-Cw6" kind="relationship" relationship="rootViewController" id="MQ8-ZB-0hx"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="UhJ-wM-e6Y" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-54" y="-561"/>
         </scene>
     </scenes>
 </document>

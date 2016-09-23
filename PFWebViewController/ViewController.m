@@ -31,6 +31,7 @@
     [webVC setProgressBarColor:[UIColor redColor]]; // Default is black
     
     [self presentViewController:webVC animated:YES completion:nil];
+//    [self.navigationController pushViewController:webVC animated:YES];
 }
 
 
