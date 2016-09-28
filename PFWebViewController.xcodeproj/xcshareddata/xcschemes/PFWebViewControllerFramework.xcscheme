@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "921A45C21D95870E0040BE3B"
-               BuildableName = "PFWebViewControllerFramework.framework"
+               BuildableName = "PFWebViewController.framework"
                BlueprintName = "PFWebViewControllerFramework"
                ReferencedContainer = "container:PFWebViewController.xcodeproj">
             </BuildableReference>
@@ -46,7 +46,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "921A45C21D95870E0040BE3B"
-            BuildableName = "PFWebViewControllerFramework.framework"
+            BuildableName = "PFWebViewController.framework"
             BlueprintName = "PFWebViewControllerFramework"
             ReferencedContainer = "container:PFWebViewController.xcodeproj">
          </BuildableReference>
@@ -64,7 +64,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "921A45C21D95870E0040BE3B"
-            BuildableName = "PFWebViewControllerFramework.framework"
+            BuildableName = "PFWebViewController.framework"
             BlueprintName = "PFWebViewControllerFramework"
             ReferencedContainer = "container:PFWebViewController.xcodeproj">
          </BuildableReference>

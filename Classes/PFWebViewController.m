@@ -209,11 +209,18 @@
 }
 
 - (void)webViewToolbarOpenInSafari:(PFWebViewToolBar *)toolbar {
+    UIApplication *application = [UIApplication sharedApplication];
+#ifndef __IPHONE_10_0
+#define __IPHONE_10_0  100000
+#endif
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
-    // Introduced in iOS 10
-    [[UIApplication sharedApplication] openURL:self.webView.URL options:@{} completionHandler:nil];
+    if ([application respondsToSelector:@selector(openURL:options:completionHandler:)]) {
+        [application openURL:self.webView.URL options:@{} completionHandler:nil];
+    } else {
+        [application openURL:self.webView.URL];
+    }
 #else
-    [[UIApplication sharedApplication] openURL:self.webView.URL];
+    [application openURL:self.webView.URL];
 #endif
 }
 
