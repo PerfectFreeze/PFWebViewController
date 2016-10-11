@@ -16,6 +16,7 @@
 - (void)webViewToolbarGoForward:(PFWebViewToolBar *)toolbar;
 - (void)webViewToolbarOpenInSafari:(PFWebViewToolBar *)toolbar;
 - (void)webViewToolbarClose:(PFWebViewToolBar *)toolbar;
+- (void)webViewToolbarDidSwitchReaderMode:(PFWebViewToolBar *)toolbar;
 
 @end
 
@@ -27,6 +28,7 @@
 @property (weak, nonatomic) IBOutlet UIButton *backBtn;
 @property (weak, nonatomic) IBOutlet UIButton *forwardBtn;
 @property (weak, nonatomic) IBOutlet UIButton *openInSafariBtn;
+@property (weak, nonatomic) IBOutlet UIButton *readerModeBtn;
 
 - (void)setup;
 

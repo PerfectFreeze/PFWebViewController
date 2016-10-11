@@ -14,8 +14,12 @@
 #define SCREENWIDTH [UIScreen mainScreen].bounds.size.width
 #define SCREENHEIGHT [UIScreen mainScreen].bounds.size.height
 
-@interface PFWebViewController () <PFWebViewToolBarDelegate> {
+@interface PFWebViewController () <PFWebViewToolBarDelegate,WKNavigationDelegate> {
     BOOL isNavigationBarHidden;
+    BOOL hasLoaded;
+    BOOL isReaderMode;
+    
+    NSString *htmlString;
 }
 
 @property (nonatomic, assign) CGFloat offset;
@@ -57,11 +61,34 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
+    self.view.backgroundColor = [UIColor whiteColor];
     
     [self.view addSubview:self.navigationHeader];
     [self.view addSubview:self.toolbar];
-    [self.view addSubview:self.webView];
     [self.view addSubview:self.progressView];
+    
+    // Load reader mode js script
+    NSBundle *bundle = [NSBundle bundleForClass:[self class]];
+    NSURL *url = [bundle URLForResource:@"PFWebViewController" withExtension:@"bundle"];
+    NSBundle *imageBundle = [NSBundle bundleWithURL:url];
+
+    NSString *filePath = [imageBundle pathForResource:@"safari-reader" ofType:@"js"];
+    NSString *script = [[NSString alloc] initWithContentsOfFile:filePath encoding:NSUTF8StringEncoding error:nil];
+    WKUserScript *userScript = [[WKUserScript alloc] initWithSource:script injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:NO];
+    WKUserContentController *userContentController = [[WKUserContentController alloc] init];
+    [userContentController addUserScript:userScript];
+    
+    WKWebViewConfiguration *configuration = [[WKWebViewConfiguration alloc] init];
+    configuration.userContentController = userContentController;
+    
+    self.webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset) configuration:configuration];
+    _webView.allowsBackForwardNavigationGestures = YES;
+    _webView.navigationDelegate = self;
+    
+    hasLoaded = NO;
+    isReaderMode = NO;
+    
+    [self.view addSubview:_webView];
     
     [self.toolbar setup];
     
@@ -113,13 +140,13 @@
 
 #pragma mark - Lazy Initialize
 
-- (WKWebView *)webView {
-    if (!_webView) {
-        _webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset)];
-        _webView.allowsBackForwardNavigationGestures = YES;
-    }
-    return _webView;
-}
+//- (WKWebView *)webView {
+//    if (!_webView) {
+//        _webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset)];
+//        _webView.allowsBackForwardNavigationGestures = YES;
+//    }
+//    return _webView;
+//}
 
 - (PFWebViewNavigationHeader *)navigationHeader {
     if (!_navigationHeader) {
@@ -174,12 +201,11 @@
 #pragma mark - Private
 
 - (void)progressChanged:(NSNumber *)newValue {
-    [UIView animateWithDuration:.1f animations:^{
-        if (self.progressView.alpha == 0) {
-            self.progressView.alpha = 1.f;
-        }
-        self.progressView.progress = newValue.floatValue;
-    }];
+    if (self.progressView.alpha == 0) {
+        self.progressView.alpha = 1.f;
+    }
+
+    [self.progressView setProgress:newValue.floatValue animated:YES];
     
     if (self.progressView.progress == 1) {
         [UIView animateWithDuration:.5f animations:^{
@@ -208,6 +234,50 @@
     }
 }
 
+- (void)webViewToolbarDidSwitchReaderMode:(PFWebViewToolBar *)toolbar
+{
+    isReaderMode = !isReaderMode;
+    if (isReaderMode) {
+//        [UIView animateWithDuration:0.3f animations:^{
+//            self.webView.alpha = 0.0f;
+//        }];
+        [_webView evaluateJavaScript:@"var ReaderArticleFinderJS = new ReaderArticleFinder(document);" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
+        }];
+        [_webView evaluateJavaScript:@"var article = ReaderArticleFinderJS.findArticle();" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
+        }];
+        [_webView evaluateJavaScript:@"article.element.innerText" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
+            if ([object isKindOfClass:[NSString class]]) {
+                if (!hasLoaded && isReaderMode) {
+                    NSMutableString *mut_str = [object mutableCopy];
+                    [mut_str insertString:@"</div>" atIndex:mut_str.length-1];
+                    [mut_str insertString:@"<div style=\"font-size:40px; font-family:'PingFangSC-Regular','Helvetica Neue';color:#303030;margin-left:40px;margin-right:40px;line-height:60px\">" atIndex:0];
+                    [mut_str replaceOccurrencesOfString:@"\n" withString:@"</br>" options:NSLiteralSearch range:NSMakeRange(0, mut_str.length)];
+                    
+                    [_webView loadHTMLString:mut_str baseURL:nil];
+                    
+                    if (isReaderMode) {
+                        // If is reader mode, show webview content after analyzing the content
+                        [UIView animateWithDuration:0.3f animations:^{
+                            self.webView.alpha = 1.0f;
+                        }];
+                    }
+                    hasLoaded = YES;
+                } else {
+                    self.webView.alpha = 1.0f;
+                }
+            } else {
+                self.webView.alpha = 1.0f;
+            }
+        }];
+        [_webView evaluateJavaScript:@"ReaderArticleFinderJS.prepareToTransitionToReader();" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
+        }];
+    } else {
+        self.webView.alpha = 1.0f;
+        NSURLRequest *request = [[NSURLRequest alloc] initWithURL:self.url cachePolicy:NSURLRequestReturnCacheDataElseLoad timeoutInterval:50.0f];
+        [self.webView loadRequest:request];
+    }
+}
+
 - (void)webViewToolbarOpenInSafari:(PFWebViewToolBar *)toolbar {
     UIApplication *application = [UIApplication sharedApplication];
 #ifndef __IPHONE_10_0
@@ -230,7 +300,45 @@
     } else {
         [self dismissViewControllerAnimated:YES completion:nil];
     }
+}
+
+- (void)webView:(WKWebView *)webView didCommitNavigation:(null_unspecified WKNavigation *)navigation
+{
+    if (![self.webView.URL.absoluteString isEqualToString:@"about:blank"]) {
+        // Cache current url after every frame entering if not blank page
+        self.url = self.webView.URL;
+        isReaderMode = NO;
+        
+        self.toolbar.readerModeBtn.selected = NO;
+        
+        // Set reader mode button enabled NO when begin navigation
+        self.toolbar.readerModeBtn.enabled = NO;
+    }
+}
+
+- (void)webView:(WKWebView *)webView didFinishNavigation:(null_unspecified WKNavigation *)navigation
+{
+    if (hasLoaded) {
+        hasLoaded = NO;
+        return;
+    }
+}
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler
+{
+    // Set reader mode button status when navigation finished
+    [_webView evaluateJavaScript:@"var ReaderArticleFinderJS = new ReaderArticleFinder(document);" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
+    }];
     
+    [_webView evaluateJavaScript:@"ReaderArticleFinderJS.isReaderModeAvailable();" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
+        if ([object integerValue] == 1) {
+            self.toolbar.readerModeBtn.enabled = YES;
+        } else {
+            self.toolbar.readerModeBtn.enabled = NO;
+        }
+    }];
+    
+    decisionHandler(WKNavigationResponsePolicyAllow);
 }
 
 @end

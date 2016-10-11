@@ -231,7 +231,7 @@
 					};
 					9287717F1D8FDAF400491C20 = {
 						CreatedOnToolsVersion = 8.0;
-						DevelopmentTeam = 37Y29WD9SV;
+						DevelopmentTeam = Q8H99663FH;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -471,7 +471,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = 37Y29WD9SV;
+				DEVELOPMENT_TEAM = Q8H99663FH;
 				INFOPLIST_FILE = PFWebViewController/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -484,7 +484,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = 37Y29WD9SV;
+				DEVELOPMENT_TEAM = Q8H99663FH;
 				INFOPLIST_FILE = PFWebViewController/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -503,6 +503,7 @@
 				921A45CD1D95870E0040BE3B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		9287717B1D8FDAF400491C20 /* Build configuration list for PBXProject "PFWebViewController" */ = {
 			isa = XCConfigurationList;

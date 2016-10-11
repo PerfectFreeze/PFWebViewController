@@ -34,7 +34,9 @@
     NSString *forwardImagePath = [imageBundle pathForResource:@"icon_next" ofType:@"png"];
     NSString *forwardDisableImagePath = [imageBundle pathForResource:@"icon_next_disable" ofType:@"png"];
     NSString *safariImagePath = [imageBundle pathForResource:@"icon_safari" ofType:@"png"];
-    
+    NSString *readerModeImagePath = [imageBundle pathForResource:@"icon_read" ofType:@"png"];
+    NSString *readerModeDisableImagePath = [imageBundle pathForResource:@"icon_read_disable" ofType:@"png"];
+
     [self.closeBtn setImage:[UIImage imageWithContentsOfFile:closeImagePath]
                    forState:UIControlStateNormal];
     [self.backBtn setImage:[UIImage imageWithContentsOfFile:backImagePath]
@@ -47,6 +49,11 @@
                      forState:UIControlStateDisabled];
     [self.openInSafariBtn setImage:[UIImage imageWithContentsOfFile:safariImagePath]
                           forState:UIControlStateNormal];
+    [self.readerModeBtn setImage:[UIImage imageWithContentsOfFile:readerModeImagePath] forState:UIControlStateNormal];
+    [self.readerModeBtn setImage:[UIImage imageWithContentsOfFile:readerModeDisableImagePath] forState:UIControlStateDisabled];
+    
+    self.readerModeBtn.selected = NO;
+    self.readerModeBtn.enabled = NO;
     
     self.backBtn.enabled = NO;
     self.forwardBtn.enabled = NO;
@@ -75,6 +82,13 @@
 - (IBAction)openInSafari:(UIButton *)sender {
     if (self.delegate) {
         [self.delegate webViewToolbarOpenInSafari:self];
+    }
+}
+
+- (IBAction)switchReaderMode:(id)sender {
+    if ([self.delegate respondsToSelector:@selector(webViewToolbarDidSwitchReaderMode:)]) {
+        [self.delegate webViewToolbarDidSwitchReaderMode:self];
+        self.readerModeBtn.selected = !self.readerModeBtn.selected;
     }
 }
 
