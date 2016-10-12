@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		50E32DD41DACEDE100906C27 /* UIView+ViewFrameGeometry.m in Sources */ = {isa = PBXBuildFile; fileRef = 50E32DD31DACEDE100906C27 /* UIView+ViewFrameGeometry.m */; };
 		921A45CA1D95870E0040BE3B /* PFWebViewController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 921A45C31D95870E0040BE3B /* PFWebViewController.framework */; };
 		921A45CB1D95870E0040BE3B /* PFWebViewController.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 921A45C31D95870E0040BE3B /* PFWebViewController.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		921A45D01D9587300040BE3B /* PFWebViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 927D6EA51D9127420066D7BC /* PFWebViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -53,6 +54,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		50E32DD21DACEDE100906C27 /* UIView+ViewFrameGeometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+ViewFrameGeometry.h"; sourceTree = "<group>"; };
+		50E32DD31DACEDE100906C27 /* UIView+ViewFrameGeometry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+ViewFrameGeometry.m"; sourceTree = "<group>"; };
+		50E32DDB1DACFA9D00906C27 /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
 		921A45C31D95870E0040BE3B /* PFWebViewController.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PFWebViewController.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		921A45C51D95870E0040BE3B /* PFWebViewControllerFramework.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PFWebViewControllerFramework.h; sourceTree = "<group>"; };
 		921A45C61D95870E0040BE3B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -95,6 +99,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		50E32DD51DACF96700906C27 /* Vendor */ = {
+			isa = PBXGroup;
+			children = (
+				50E32DD21DACEDE100906C27 /* UIView+ViewFrameGeometry.h */,
+				50E32DD31DACEDE100906C27 /* UIView+ViewFrameGeometry.m */,
+			);
+			name = Vendor;
+			sourceTree = "<group>";
+		};
+		50E32DDA1DACFA9D00906C27 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				50E32DDB1DACFA9D00906C27 /* libxml2.tbd */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		921A45C41D95870E0040BE3B /* PFWebViewControllerFramework */ = {
 			isa = PBXGroup;
 			children = (
@@ -107,6 +128,7 @@
 		927D6EA31D9127420066D7BC /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				50E32DD51DACF96700906C27 /* Vendor */,
 				927D6EA41D9127420066D7BC /* PFWebViewController.bundle */,
 				927D6EA51D9127420066D7BC /* PFWebViewController.h */,
 				927D6EA61D9127420066D7BC /* PFWebViewController.m */,
@@ -126,6 +148,7 @@
 				928771821D8FDAF400491C20 /* PFWebViewController */,
 				921A45C41D95870E0040BE3B /* PFWebViewControllerFramework */,
 				928771811D8FDAF400491C20 /* Products */,
+				50E32DDA1DACFA9D00906C27 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -294,6 +317,7 @@
 			files = (
 				9287718B1D8FDAF400491C20 /* ViewController.m in Sources */,
 				928771881D8FDAF400491C20 /* AppDelegate.m in Sources */,
+				50E32DD41DACEDE100906C27 /* UIView+ViewFrameGeometry.m in Sources */,
 				927D6EAE1D9127420066D7BC /* PFWebViewNavigationHeader.m in Sources */,
 				927D6EAF1D9127420066D7BC /* PFWebViewToolBar.m in Sources */,
 				928771851D8FDAF400491C20 /* main.m in Sources */,
@@ -477,6 +501,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = io.Cee.PFWebViewController;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALID_ARCHS = "arm64 armv7 armv7s";
 			};
 			name = Debug;
 		};
@@ -490,6 +515,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = io.Cee.PFWebViewController;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALID_ARCHS = "arm64 armv7 armv7s";
 			};
 			name = Release;
 		};

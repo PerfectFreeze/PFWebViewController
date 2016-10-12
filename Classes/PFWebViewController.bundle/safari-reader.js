@@ -1499,6 +1499,7 @@ ReaderArticleFinder.prototype = {
         return true;
     },
     findArticle: function findArticle(forceFindingArticle) {
+        console.log("fuck");
         if (!this.canRunReaderDetection())
             return null;
         var suggestedCandidate = this.findSuggestedCandidate();
