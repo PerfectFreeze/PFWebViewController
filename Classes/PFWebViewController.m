@@ -26,7 +26,9 @@
 @property (nonatomic, assign) CGFloat offset;
 @property (nonatomic, strong) WKWebView *webView;
 @property (nonatomic, strong) UIView *webMaskView;
+@property (nonatomic, strong) CAShapeLayer *maskLayer;
 
+@property (nonatomic, strong) UIView *readerWebViewBackgroundView;
 @property (nonatomic, strong) WKWebView *readerWebView;
 @property (nonatomic, strong) PFWebViewNavigationHeader *navigationHeader;
 @property (nonatomic, strong) PFWebViewToolBar *toolbar;
@@ -111,10 +113,19 @@
     _webMaskView.userInteractionEnabled = NO;
     
     [self.view addSubview:self.webMaskView];
+
     
-    self.readerWebView = [[WKWebView alloc] initWithFrame:CGRectMake(0.0f, self.webView.bottom, self.view.frame.size.width, 0.0f) configuration:configuration];
+    self.readerWebView = [[WKWebView alloc] initWithFrame:self.webView.bounds configuration:configuration];
     _readerWebView.allowsBackForwardNavigationGestures = NO;
     _readerWebView.navigationDelegate = self;
+    _readerWebView.userInteractionEnabled = NO;
+    _readerWebView.layer.masksToBounds = YES;
+    
+    self.maskLayer = [CAShapeLayer layer];
+    self.maskLayer.frame = _readerWebViewBackgroundView.bounds;
+    
+    [_readerWebView.layer setMask:self.maskLayer];
+    
     [self.view addSubview:_readerWebView];
     
     [self.toolbar setup];
@@ -307,10 +318,11 @@
     } else {
         [UIView animateWithDuration:0.3f animations:^{
             self.webMaskView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.0f];
-            _readerWebView.height = 0.0f;
-            _readerWebView.top = _webView.bottom;
+//            _readerWebView.height = 0.0f;
+//            _readerWebView.top = _webView.bottom;
+            self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, _readerWebView.height);
         } completion:^(BOOL finished) {
-            
+            _readerWebView.userInteractionEnabled = NO;
         }];
     }
 }
@@ -418,13 +430,13 @@
       didReceiveScriptMessage:(WKScriptMessage *)message
 {
     _readerWebView.alpha = 1.0f;
-    
+    self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, 0.0f);
+
     [UIView animateWithDuration:0.3f animations:^{
         self.webMaskView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.4f];
-        _readerWebView.height = _webView.height + 2.0f;
-        _readerWebView.top = _webView.top;
+        self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, 0.0f);
     } completion:^(BOOL finished) {
-        
+        _readerWebView.userInteractionEnabled = YES;
     }];
 }
 
