@@ -1,15 +1,17 @@
 # PFWebViewController
 
-A light-weight webview controller using WKWebView. Only supports iOS 9 and above.
+[![Version](https://img.shields.io/cocoapods/v/PFWebViewController.svg?style=flat)](http://cocoapods.org/pods/PFWebViewController)
+[![License](https://img.shields.io/cocoapods/l/PFWebViewController.svg?style=flat)](http://cocoapods.org/pods/PFWebViewController)
+[![Platform](https://img.shields.io/cocoapods/p/PFWebViewController.svg?style=flat)](http://cocoapods.org/pods/PFWebViewController)
+[![Downloads](https://img.shields.io/cocoapods/dt/PFWebViewController.svg?style=flat)](http://cocoapods.org/pods/PFWebViewController)
 
-Easy use and less memory consuming than [RxWebViewController](https://github.com/Roxasora/RxWebViewController).
+## Features
 
-## Demo
+- A light-weight webview controller using WKWebView. Only supports iOS 9 and above.
 
-+ [Present Demo](Demo/Present.mov)
-+ [Push Demo](Demo/Push.mov)
+- Easy use and less memory consuming than [RxWebViewController](https://github.com/Roxasora/RxWebViewController).
 
-You can open the sample project and take a look by changing storyboard's main entry point.
+- Support Safari-like reader mode.
 
 ## Installation
 
@@ -30,7 +32,7 @@ Add `PFWebViewController.framework` to your Xcode project.
 Add `PFWebViewController` to your `Podfile`:
 
 ```ruby
-pod 'PFWebViewController'
+pod 'PFWebViewController', '~> 1.1'
 ```
 
 Run `pod install` to install this framework.
