@@ -7,15 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		50E32DD41DACEDE100906C27 /* UIView+ViewFrameGeometry.m in Sources */ = {isa = PBXBuildFile; fileRef = 50E32DD31DACEDE100906C27 /* UIView+ViewFrameGeometry.m */; };
 		921A45CA1D95870E0040BE3B /* PFWebViewController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 921A45C31D95870E0040BE3B /* PFWebViewController.framework */; };
 		921A45CB1D95870E0040BE3B /* PFWebViewController.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 921A45C31D95870E0040BE3B /* PFWebViewController.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		921A45D01D9587300040BE3B /* PFWebViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 927D6EA51D9127420066D7BC /* PFWebViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		921A45D11D9587440040BE3B /* PFWebViewNavigationHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 927D6EA71D9127420066D7BC /* PFWebViewNavigationHeader.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		921A45D21D9587440040BE3B /* PFWebViewToolBar.h in Headers */ = {isa = PBXBuildFile; fileRef = 927D6EA91D9127420066D7BC /* PFWebViewToolBar.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		921A45D11D9587440040BE3B /* PFWebViewNavigationHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 927D6EA71D9127420066D7BC /* PFWebViewNavigationHeader.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		921A45D21D9587440040BE3B /* PFWebViewToolBar.h in Headers */ = {isa = PBXBuildFile; fileRef = 927D6EA91D9127420066D7BC /* PFWebViewToolBar.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		921A45D31D95875A0040BE3B /* PFWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 927D6EA61D9127420066D7BC /* PFWebViewController.m */; };
 		921A45D41D95875A0040BE3B /* PFWebViewNavigationHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 927D6EA81D9127420066D7BC /* PFWebViewNavigationHeader.m */; };
 		921A45D51D95875A0040BE3B /* PFWebViewToolBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 927D6EAA1D9127420066D7BC /* PFWebViewToolBar.m */; };
 		921A45D61D9587600040BE3B /* PFWebViewController.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 927D6EA41D9127420066D7BC /* PFWebViewController.bundle */; };
+		921CC0311DAF22D6008DAB69 /* UIView+ViewFrameGeometry.h in Headers */ = {isa = PBXBuildFile; fileRef = 50E32DD21DACEDE100906C27 /* UIView+ViewFrameGeometry.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		921CC0321DAF22E2008DAB69 /* UIView+ViewFrameGeometry.m in Sources */ = {isa = PBXBuildFile; fileRef = 50E32DD31DACEDE100906C27 /* UIView+ViewFrameGeometry.m */; };
 		927D6EAC1D9127420066D7BC /* PFWebViewController.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 927D6EA41D9127420066D7BC /* PFWebViewController.bundle */; };
 		927D6EAD1D9127420066D7BC /* PFWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 927D6EA61D9127420066D7BC /* PFWebViewController.m */; };
 		927D6EAE1D9127420066D7BC /* PFWebViewNavigationHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 927D6EA81D9127420066D7BC /* PFWebViewNavigationHeader.m */; };
@@ -53,6 +56,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		50E32DD21DACEDE100906C27 /* UIView+ViewFrameGeometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+ViewFrameGeometry.h"; sourceTree = "<group>"; };
+		50E32DD31DACEDE100906C27 /* UIView+ViewFrameGeometry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+ViewFrameGeometry.m"; sourceTree = "<group>"; };
+		50E32DDB1DACFA9D00906C27 /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
 		921A45C31D95870E0040BE3B /* PFWebViewController.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PFWebViewController.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		921A45C51D95870E0040BE3B /* PFWebViewControllerFramework.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PFWebViewControllerFramework.h; sourceTree = "<group>"; };
 		921A45C61D95870E0040BE3B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -95,6 +101,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		50E32DD51DACF96700906C27 /* Vendor */ = {
+			isa = PBXGroup;
+			children = (
+				50E32DD21DACEDE100906C27 /* UIView+ViewFrameGeometry.h */,
+				50E32DD31DACEDE100906C27 /* UIView+ViewFrameGeometry.m */,
+			);
+			name = Vendor;
+			sourceTree = "<group>";
+		};
+		50E32DDA1DACFA9D00906C27 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				50E32DDB1DACFA9D00906C27 /* libxml2.tbd */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		921A45C41D95870E0040BE3B /* PFWebViewControllerFramework */ = {
 			isa = PBXGroup;
 			children = (
@@ -107,6 +130,7 @@
 		927D6EA31D9127420066D7BC /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				50E32DD51DACF96700906C27 /* Vendor */,
 				927D6EA41D9127420066D7BC /* PFWebViewController.bundle */,
 				927D6EA51D9127420066D7BC /* PFWebViewController.h */,
 				927D6EA61D9127420066D7BC /* PFWebViewController.m */,
@@ -126,6 +150,7 @@
 				928771821D8FDAF400491C20 /* PFWebViewController */,
 				921A45C41D95870E0040BE3B /* PFWebViewControllerFramework */,
 				928771811D8FDAF400491C20 /* Products */,
+				50E32DDA1DACFA9D00906C27 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -172,6 +197,7 @@
 				921A45D01D9587300040BE3B /* PFWebViewController.h in Headers */,
 				921A45D11D9587440040BE3B /* PFWebViewNavigationHeader.h in Headers */,
 				921A45D21D9587440040BE3B /* PFWebViewToolBar.h in Headers */,
+				921CC0311DAF22D6008DAB69 /* UIView+ViewFrameGeometry.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -221,17 +247,19 @@
 		928771781D8FDAF400491C20 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				KnownAssetTags = (
+					PFNavigationController,
+				);
 				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = Cee;
 				TargetAttributes = {
 					921A45C21D95870E0040BE3B = {
 						CreatedOnToolsVersion = 8.0;
-						DevelopmentTeam = 37Y29WD9SV;
 						ProvisioningStyle = Automatic;
 					};
 					9287717F1D8FDAF400491C20 = {
 						CreatedOnToolsVersion = 8.0;
-						DevelopmentTeam = 37Y29WD9SV;
+						DevelopmentTeam = Q8H99663FH;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -284,6 +312,7 @@
 			files = (
 				921A45D31D95875A0040BE3B /* PFWebViewController.m in Sources */,
 				921A45D41D95875A0040BE3B /* PFWebViewNavigationHeader.m in Sources */,
+				921CC0321DAF22E2008DAB69 /* UIView+ViewFrameGeometry.m in Sources */,
 				921A45D51D95875A0040BE3B /* PFWebViewToolBar.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -294,6 +323,7 @@
 			files = (
 				9287718B1D8FDAF400491C20 /* ViewController.m in Sources */,
 				928771881D8FDAF400491C20 /* AppDelegate.m in Sources */,
+				50E32DD41DACEDE100906C27 /* UIView+ViewFrameGeometry.m in Sources */,
 				927D6EAE1D9127420066D7BC /* PFWebViewNavigationHeader.m in Sources */,
 				927D6EAF1D9127420066D7BC /* PFWebViewToolBar.m in Sources */,
 				928771851D8FDAF400491C20 /* main.m in Sources */,
@@ -337,7 +367,7 @@
 				CODE_SIGN_IDENTITY = "";
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 37Y29WD9SV;
+				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -360,7 +390,7 @@
 				CODE_SIGN_IDENTITY = "";
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 37Y29WD9SV;
+				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -471,12 +501,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = 37Y29WD9SV;
+				DEVELOPMENT_TEAM = Q8H99663FH;
 				INFOPLIST_FILE = PFWebViewController/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = io.Cee.PFWebViewController;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALID_ARCHS = "arm64 armv7 armv7s";
 			};
 			name = Debug;
 		};
@@ -484,12 +515,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = 37Y29WD9SV;
+				DEVELOPMENT_TEAM = Q8H99663FH;
 				INFOPLIST_FILE = PFWebViewController/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = io.Cee.PFWebViewController;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALID_ARCHS = "arm64 armv7 armv7s";
 			};
 			name = Release;
 		};
@@ -503,6 +535,7 @@
 				921A45CD1D95870E0040BE3B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		9287717B1D8FDAF400491C20 /* Build configuration list for PBXProject "PFWebViewController" */ = {
 			isa = XCConfigurationList;

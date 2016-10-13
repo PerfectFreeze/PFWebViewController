@@ -7,7 +7,7 @@
 //
 
 #import "ViewController.h"
-#import "PFWebViewController.h"
+#import "PFWebViewController/PFWebViewController.h"
 
 @interface ViewController ()
 
@@ -27,7 +27,7 @@
 }
 
 - (IBAction)btnPressed:(UIButton *)sender {
-    PFWebViewController *webVC = [[PFWebViewController alloc] initWithURLString:@"https://github.com"];
+    PFWebViewController *webVC = [[PFWebViewController alloc] initWithURLString:@"http://3g.qq.com"];
     [webVC setProgressBarColor:[UIColor redColor]]; // Default is black
     
     [self presentViewController:webVC animated:YES completion:nil];

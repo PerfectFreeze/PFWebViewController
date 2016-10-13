@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="11201" systemVersion="15G1004" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="11201" systemVersion="16A323" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11161"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -20,6 +20,7 @@
                 <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="BsK-Sa-L9X">
                     <subviews>
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="HD6-Yi-Ywl">
+                            <state key="normal" image="PFWebViewController.bundle/icon_close"/>
                             <connections>
                                 <action selector="close:" destination="iN0-l3-epB" eventType="touchUpInside" id="jIs-c3-K7U"/>
                             </connections>
@@ -36,6 +37,12 @@
                                 <action selector="goForward:" destination="iN0-l3-epB" eventType="touchUpInside" id="zVb-cL-Xnb"/>
                             </connections>
                         </button>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hiS-BT-fo1">
+                            <state key="normal" image="PFWebViewController.bundle/icon_read"/>
+                            <connections>
+                                <action selector="switchReaderMode:" destination="iN0-l3-epB" eventType="touchUpInside" id="Wi4-FL-QiX"/>
+                            </connections>
+                        </button>
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="g4d-zs-zgE">
                             <state key="normal" image="PFWebViewController.bundle/icon_safari"/>
                             <connections>
@@ -45,8 +52,10 @@
                     </subviews>
                     <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                     <constraints>
+                        <constraint firstItem="hiS-BT-fo1" firstAttribute="width" secondItem="HD6-Yi-Ywl" secondAttribute="width" id="Kwr-6A-126"/>
                         <constraint firstAttribute="height" constant="50" id="PDh-3X-jn1"/>
                         <constraint firstItem="tm1-FX-FwU" firstAttribute="width" secondItem="HD6-Yi-Ywl" secondAttribute="width" id="SI2-SQ-nYH"/>
+                        <constraint firstItem="hiS-BT-fo1" firstAttribute="height" secondItem="HD6-Yi-Ywl" secondAttribute="height" id="akI-se-QBA"/>
                         <constraint firstItem="HD6-Yi-Ywl" firstAttribute="centerY" secondItem="BsK-Sa-L9X" secondAttribute="centerY" id="ety-bf-nh2"/>
                         <constraint firstItem="dFD-b5-43e" firstAttribute="width" secondItem="HD6-Yi-Ywl" secondAttribute="width" id="hV5-Xd-m7U"/>
                         <constraint firstItem="g4d-zs-zgE" firstAttribute="height" secondItem="HD6-Yi-Ywl" secondAttribute="height" id="j1e-l7-zB6"/>
@@ -71,13 +80,16 @@
                 <outlet property="closeBtn" destination="HD6-Yi-Ywl" id="5YS-2G-KCS"/>
                 <outlet property="forwardBtn" destination="tm1-FX-FwU" id="lEQ-3h-nus"/>
                 <outlet property="openInSafariBtn" destination="g4d-zs-zgE" id="Vpd-Rs-33V"/>
+                <outlet property="readerModeBtn" destination="hiS-BT-fo1" id="cVz-Bm-2bL"/>
             </connections>
             <point key="canvasLocation" x="-122.5" y="-331"/>
         </view>
     </objects>
     <resources>
         <image name="PFWebViewController.bundle/icon_back" width="14" height="14"/>
+        <image name="PFWebViewController.bundle/icon_close" width="14" height="14"/>
         <image name="PFWebViewController.bundle/icon_next" width="14" height="14"/>
+        <image name="PFWebViewController.bundle/icon_read" width="14" height="14"/>
         <image name="PFWebViewController.bundle/icon_safari" width="14" height="14"/>
     </resources>
 </document>
