@@ -36,6 +36,7 @@
     NSString *safariImagePath = [imageBundle pathForResource:@"icon_safari" ofType:@"png"];
     NSString *readerModeImagePath = [imageBundle pathForResource:@"icon_read" ofType:@"png"];
     NSString *readerModeDisableImagePath = [imageBundle pathForResource:@"icon_read_disable" ofType:@"png"];
+    NSString *readerModeSelectedImagePath = [imageBundle pathForResource:@"icon_read_back" ofType:@"png"];
 
     [self.closeBtn setImage:[UIImage imageWithContentsOfFile:closeImagePath]
                    forState:UIControlStateNormal];
@@ -51,6 +52,7 @@
                           forState:UIControlStateNormal];
     [self.readerModeBtn setImage:[UIImage imageWithContentsOfFile:readerModeImagePath] forState:UIControlStateNormal];
     [self.readerModeBtn setImage:[UIImage imageWithContentsOfFile:readerModeDisableImagePath] forState:UIControlStateDisabled];
+    [self.readerModeBtn setImage:[UIImage imageWithContentsOfFile:readerModeSelectedImagePath] forState:UIControlStateSelected];
     
     self.readerModeBtn.selected = NO;
     self.readerModeBtn.enabled = NO;
