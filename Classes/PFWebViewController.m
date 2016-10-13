@@ -121,14 +121,9 @@
     self.toolbar.frame = CGRectMake(0, SCREENHEIGHT - 50.5f, SCREENWIDTH, 50.5f);
     self.progressView.frame = CGRectMake(0, 19 + self.offset, SCREENWIDTH, 2);
     
-    self.webView.frame = CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset);
     self.webMaskView.frame = self.webView.frame;
     self.readerWebView.frame = self.webView.frame;
-    
-    [_readerWebView.layer setMask:self.maskLayer];
-    
-    [self.view addSubview:_readerWebView];
-
+    self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, self.maskLayer.bounds.size.height);
 }
 
 #pragma mark - Lazy Initialize
