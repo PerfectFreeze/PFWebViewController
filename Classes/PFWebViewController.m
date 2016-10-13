@@ -123,7 +123,7 @@
     
     self.webView.frame = CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset);
     self.webMaskView.frame = self.webView.frame;
-    self.readerWebView.frame = self.webView.bounds;
+    self.readerWebView.frame = self.webView.frame;
     
     [_readerWebView.layer setMask:self.maskLayer];
     
@@ -284,6 +284,7 @@
         } completion:^(BOOL finished) {
             _readerWebView.userInteractionEnabled = NO;
         }];
+        [_readerWebView loadHTMLString:@"" baseURL:nil];
         [self.webView goBack];
     }
 }
@@ -296,6 +297,7 @@
         } completion:^(BOOL finished) {
             _readerWebView.userInteractionEnabled = NO;
         }];
+        [_readerWebView loadHTMLString:@"" baseURL:nil];
         [self.webView goForward];
     }
 }
@@ -330,7 +332,7 @@
         [_webView evaluateJavaScript:@"ReaderArticleFinderJS.prepareToTransitionToReader();" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
         }];
     } else {
-        [UIView animateWithDuration:0.3f animations:^{
+        [UIView animateWithDuration:0.2f animations:^{
             self.webMaskView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.0f];
             self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, 0.0f);
         } completion:^(BOOL finished) {
@@ -444,7 +446,7 @@
     _readerWebView.alpha = 1.0f;
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        [UIView animateWithDuration:0.3f animations:^{
+        [UIView animateWithDuration:0.1f delay:0.2f options:UIViewAnimationOptionCurveEaseInOut animations:^{
             self.webMaskView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.4f];
             self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, _readerWebView.height);
         } completion:^(BOOL finished) {
