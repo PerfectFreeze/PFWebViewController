@@ -11,8 +11,8 @@
 		921A45CA1D95870E0040BE3B /* PFWebViewController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 921A45C31D95870E0040BE3B /* PFWebViewController.framework */; };
 		921A45CB1D95870E0040BE3B /* PFWebViewController.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 921A45C31D95870E0040BE3B /* PFWebViewController.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		921A45D01D9587300040BE3B /* PFWebViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 927D6EA51D9127420066D7BC /* PFWebViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		921A45D11D9587440040BE3B /* PFWebViewNavigationHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 927D6EA71D9127420066D7BC /* PFWebViewNavigationHeader.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		921A45D21D9587440040BE3B /* PFWebViewToolBar.h in Headers */ = {isa = PBXBuildFile; fileRef = 927D6EA91D9127420066D7BC /* PFWebViewToolBar.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		921A45D11D9587440040BE3B /* PFWebViewNavigationHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 927D6EA71D9127420066D7BC /* PFWebViewNavigationHeader.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		921A45D21D9587440040BE3B /* PFWebViewToolBar.h in Headers */ = {isa = PBXBuildFile; fileRef = 927D6EA91D9127420066D7BC /* PFWebViewToolBar.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		921A45D31D95875A0040BE3B /* PFWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 927D6EA61D9127420066D7BC /* PFWebViewController.m */; };
 		921A45D41D95875A0040BE3B /* PFWebViewNavigationHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 927D6EA81D9127420066D7BC /* PFWebViewNavigationHeader.m */; };
 		921A45D51D95875A0040BE3B /* PFWebViewToolBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 927D6EAA1D9127420066D7BC /* PFWebViewToolBar.m */; };

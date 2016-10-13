@@ -26,9 +26,8 @@
 @property (nonatomic, assign) CGFloat offset;
 @property (nonatomic, strong) WKWebView *webView;
 @property (nonatomic, strong) UIView *webMaskView;
-@property (nonatomic, strong) CAShapeLayer *maskLayer;
+@property (nonatomic, strong) CALayer *maskLayer;
 
-@property (nonatomic, strong) UIView *readerWebViewBackgroundView;
 @property (nonatomic, strong) WKWebView *readerWebView;
 @property (nonatomic, strong) PFWebViewNavigationHeader *navigationHeader;
 @property (nonatomic, strong) PFWebViewToolBar *toolbar;
@@ -66,7 +65,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-//    [WebConsole enable];
+    //    [WebConsole enable];
     
     self.view.backgroundColor = [UIColor whiteColor];
     
@@ -78,10 +77,10 @@
     NSBundle *bundle = [NSBundle bundleForClass:[self class]];
     NSURL *url = [bundle URLForResource:@"PFWebViewController" withExtension:@"bundle"];
     NSBundle *imageBundle = [NSBundle bundleWithURL:url];
-
+    
     NSString *readerScriptFilePath = [imageBundle pathForResource:@"safari-reader" ofType:@"js"];
     NSString *readerCheckScriptFilePath = [imageBundle pathForResource:@"safari-reader-check" ofType:@"js"];
-
+    
     NSString *indexPageFilePath = [imageBundle pathForResource:@"index" ofType:@"html"];
     
     // Load HTML for reader mode
@@ -97,7 +96,7 @@
     [userContentController addUserScript:userScript];
     [userContentController addUserScript:check_userScript];
     [userContentController addScriptMessageHandler:self name:@"JSController"];
-
+    
     WKWebViewConfiguration *configuration = [[WKWebViewConfiguration alloc] init];
     configuration.userContentController = userContentController;
     
@@ -113,16 +112,19 @@
     _webMaskView.userInteractionEnabled = NO;
     
     [self.view addSubview:self.webMaskView];
-
     
-    self.readerWebView = [[WKWebView alloc] initWithFrame:self.webView.bounds configuration:configuration];
+    
+    self.readerWebView = [[WKWebView alloc] initWithFrame:self.webView.frame configuration:configuration];
     _readerWebView.allowsBackForwardNavigationGestures = NO;
     _readerWebView.navigationDelegate = self;
     _readerWebView.userInteractionEnabled = NO;
     _readerWebView.layer.masksToBounds = YES;
     
-    self.maskLayer = [CAShapeLayer layer];
-    self.maskLayer.frame = _readerWebViewBackgroundView.bounds;
+    self.maskLayer = [CALayer layer];
+//    self.maskLayer.backgroundColor = [UIColor clearColor].CGColor;
+    self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, 0.0f);
+    self.maskLayer.borderWidth = _readerWebView.height / 2.0f;
+    self.maskLayer.anchorPoint = CGPointMake(0.5, 1.0f);
     
     [_readerWebView.layer setMask:self.maskLayer];
     
@@ -242,7 +244,7 @@
     if (self.progressView.alpha == 0) {
         self.progressView.alpha = 1.f;
     }
-
+    
     [self.progressView setProgress:newValue.floatValue animated:YES];
     
     if (self.progressView.progress == 1) {
@@ -258,16 +260,15 @@
     }
 }
 
-#pragma mark - PFWebViewToolBarDelegate 
+#pragma mark - PFWebViewToolBarDelegate
 
 - (void)webViewToolbarGoBack:(PFWebViewToolBar *)toolbar {
     if ([self.webView canGoBack]) {
         [UIView animateWithDuration:0.3f animations:^{
             self.webMaskView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.0f];
-            _readerWebView.height = 0.0f;
-            _readerWebView.top = _webView.bottom;
+            self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, 0.0f);
         } completion:^(BOOL finished) {
-            
+            _readerWebView.userInteractionEnabled = NO;
         }];
         [self.webView goBack];
     }
@@ -277,10 +278,9 @@
     if ([self.webView canGoForward]) {
         [UIView animateWithDuration:0.3f animations:^{
             self.webMaskView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.0f];
-            _readerWebView.height = 0.0f;
-            _readerWebView.top = _webView.bottom;
+            self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, 0.0f);
         } completion:^(BOOL finished) {
-            
+            _readerWebView.userInteractionEnabled = NO;
         }];
         [self.webView goForward];
     }
@@ -307,7 +307,7 @@
                     NSInteger location = t.location + t.length;
                     
                     [mut_str insertString:object atIndex:location];
-
+                    
                     [_readerWebView loadHTMLString:mut_str baseURL:self.url];
                     _readerWebView.alpha = 0.0f;
                 }];
@@ -318,9 +318,7 @@
     } else {
         [UIView animateWithDuration:0.3f animations:^{
             self.webMaskView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.0f];
-//            _readerWebView.height = 0.0f;
-//            _readerWebView.top = _webView.bottom;
-            self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, _readerWebView.height);
+            self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, 0.0f);
         } completion:^(BOOL finished) {
             _readerWebView.userInteractionEnabled = NO;
         }];
@@ -430,14 +428,16 @@
       didReceiveScriptMessage:(WKScriptMessage *)message
 {
     _readerWebView.alpha = 1.0f;
-    self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, 0.0f);
-
-    [UIView animateWithDuration:0.3f animations:^{
-        self.webMaskView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.4f];
-        self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, 0.0f);
-    } completion:^(BOOL finished) {
-        _readerWebView.userInteractionEnabled = YES;
-    }];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [UIView animateWithDuration:0.3f animations:^{
+            self.webMaskView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.4f];
+            self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, _readerWebView.height);
+        } completion:^(BOOL finished) {
+            _readerWebView.userInteractionEnabled = YES;
+        }];
+    });
+    
 }
 
 @end
