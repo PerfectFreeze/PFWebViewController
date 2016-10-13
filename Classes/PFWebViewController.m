@@ -10,7 +10,6 @@
 #import "PFWebViewNavigationHeader.h"
 #import "PFWebViewToolBar.h"
 #import <WebKit/WebKit.h>
-#import "UIView+ViewFrameGeometry.h"
 
 #define SCREENWIDTH [UIScreen mainScreen].bounds.size.width
 #define SCREENHEIGHT [UIScreen mainScreen].bounds.size.height
@@ -123,7 +122,7 @@
     
     self.webMaskView.frame = self.webView.frame;
     self.readerWebView.frame = self.webView.frame;
-    self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, self.maskLayer.bounds.size.height);
+    self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.frame.size.width, self.maskLayer.bounds.size.height);
 }
 
 #pragma mark - Lazy Initialize
@@ -189,8 +188,8 @@
     [self.view addSubview:self.webMaskView];
 
     self.maskLayer = [CALayer layer];
-    self.maskLayer.frame = CGRectMake(0.0f, 0.0f, self.readerWebView.width, 0.0f);
-    self.maskLayer.borderWidth = self.readerWebView.height / 2.0f;
+    self.maskLayer.frame = CGRectMake(0.0f, 0.0f, self.readerWebView.frame.size.width, 0.0f);
+    self.maskLayer.borderWidth = self.readerWebView.frame.size.height / 2.0f;
     self.maskLayer.anchorPoint = CGPointMake(0.5, 1.0f);
     
     [self.readerWebView.layer setMask:self.maskLayer];
@@ -283,7 +282,7 @@
     if ([self.webView canGoBack]) {
         [UIView animateWithDuration:0.3f animations:^{
             self.webMaskView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.0f];
-            self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, 0.0f);
+            self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.frame.size.width, 0.0f);
         } completion:^(BOOL finished) {
             _readerWebView.userInteractionEnabled = NO;
         }];
@@ -296,7 +295,7 @@
     if ([self.webView canGoForward]) {
         [UIView animateWithDuration:0.3f animations:^{
             self.webMaskView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.0f];
-            self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, 0.0f);
+            self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.frame.size.width, 0.0f);
         } completion:^(BOOL finished) {
             _readerWebView.userInteractionEnabled = NO;
         }];
@@ -336,7 +335,7 @@
     } else {
         [UIView animateWithDuration:0.2f animations:^{
             self.webMaskView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.0f];
-            self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, 0.0f);
+            self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.frame.size.width, 0.0f);
         } completion:^(BOOL finished) {
             _readerWebView.userInteractionEnabled = NO;
         }];
@@ -445,7 +444,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         [UIView animateWithDuration:0.1f delay:0.2f options:UIViewAnimationOptionCurveEaseInOut animations:^{
             self.webMaskView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.4f];
-            self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, _readerWebView.height);
+            self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.frame.size.width, _readerWebView.frame.size.height);
         } completion:^(BOOL finished) {
             _readerWebView.userInteractionEnabled = YES;
         }];
