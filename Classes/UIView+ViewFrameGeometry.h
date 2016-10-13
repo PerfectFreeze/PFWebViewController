@@ -37,9 +37,6 @@ CGSize CGSizeScale(CGSize size, CGFloat scale);
 - (void) scaleBy: (CGFloat) scaleFactor;
 - (void) fitInSize: (CGSize) aSize;
 
-- (CGFloat) widthForString:(NSString *)value fontSize:(CGFloat)fontSize andHeight:(CGFloat)height;
-- (CGFloat) heightForString:(NSString *)value font:(UIFont *)font andWidth:(CGFloat)width;
-
 - (UIViewController *) getCurrentVC;
 - (UIImage *) convertViewToImage;
 @end

@@ -40,18 +40,6 @@ CGRect CGRectMoveToCenter(CGRect rect, CGPoint center)
 
 @implementation UIView (ViewGeometry)
 
-- (CGFloat) widthForString:(NSString *)value fontSize:(CGFloat)fontSize andHeight:(CGFloat)height
-{
-    CGSize sizeToFit = [value sizeWithFont:[UIFont systemFontOfSize:fontSize] constrainedToSize:CGSizeMake(CGFLOAT_MAX, height) lineBreakMode:NSLineBreakByWordWrapping];
-    return sizeToFit.width;
-}
-
-- (CGFloat) heightForString:(NSString *)value font:(UIFont *)font andWidth:(CGFloat)width
-{
-    CGSize sizeToFit = [value sizeWithFont:font constrainedToSize:CGSizeMake(width, CGFLOAT_MAX) lineBreakMode:NSLineBreakByWordWrapping];
-    return sizeToFit.height;
-}
-
 - (UIViewController *) getCurrentVC
 {
     UIViewController *result = nil;

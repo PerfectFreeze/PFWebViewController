@@ -72,7 +72,102 @@
     [self.view addSubview:self.navigationHeader];
     [self.view addSubview:self.toolbar];
     [self.view addSubview:self.progressView];
+
+    [self setupReaderMode];
+    [self.toolbar setup];
     
+    [self loadWebContent];
+}
+
+- (void)loadWebContent {
+    if (self.url) {
+        [self.webView loadRequest:[NSURLRequest requestWithURL:self.url]];
+        return;
+    }
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self.webView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:nil];
+    [self.webView addObserver:self forKeyPath:@"canGoBack" options:NSKeyValueObservingOptionNew context:nil];
+    [self.webView addObserver:self forKeyPath:@"canGoForward" options:NSKeyValueObservingOptionNew context:nil];
+    [self.webView addObserver:self forKeyPath:@"URL" options:NSKeyValueObservingOptionNew context:nil];
+    
+    if (self.navigationController) {
+        isNavigationBarHidden = self.navigationController.navigationBar.hidden;
+        [self.navigationController setNavigationBarHidden:YES];
+    }
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [self.webView removeObserver:self forKeyPath:@"estimatedProgress"];
+    [self.webView removeObserver:self forKeyPath:@"canGoBack"];
+    [self.webView removeObserver:self forKeyPath:@"canGoForward"];
+    [self.webView removeObserver:self forKeyPath:@"URL"];
+    
+    if (self.navigationController) {
+        [self.navigationController setNavigationBarHidden:isNavigationBarHidden];
+    }
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    
+    self.offset = SCREENWIDTH < SCREENHEIGHT ? 20.f : 0.f;
+    
+    self.webView.frame = CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset);
+    self.navigationHeader.frame = CGRectMake(0, 0, SCREENWIDTH, self.offset + 20.5f);
+    self.toolbar.frame = CGRectMake(0, SCREENHEIGHT - 50.5f, SCREENWIDTH, 50.5f);
+    self.progressView.frame = CGRectMake(0, 19 + self.offset, SCREENWIDTH, 2);
+    
+    self.webView.frame = CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset);
+    self.webMaskView.frame = self.webView.frame;
+    self.readerWebView.frame = self.webView.bounds;
+    
+    [_readerWebView.layer setMask:self.maskLayer];
+    
+    [self.view addSubview:_readerWebView];
+
+}
+
+#pragma mark - Lazy Initialize
+
+//- (WKWebView *)webView {
+//    if (!_webView) {
+//        _webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset)];
+//        _webView.allowsBackForwardNavigationGestures = YES;
+//    }
+//    return _webView;
+//}
+
+- (PFWebViewNavigationHeader *)navigationHeader {
+    if (!_navigationHeader) {
+        _navigationHeader = [[PFWebViewNavigationHeader alloc] initWithURL:self.url];
+    }
+    return _navigationHeader;
+}
+
+- (PFWebViewToolBar *)toolbar {
+    if (!_toolbar) {
+        _toolbar = [[PFWebViewToolBar alloc] initWithFrame:CGRectMake(0, SCREENHEIGHT - 50.5f, SCREENWIDTH, 50.5f)];
+        _toolbar.delegate = self;
+    }
+    return _toolbar;
+}
+
+- (UIProgressView *)progressView {
+    if (!_progressView) {
+        _progressView = [[UIProgressView alloc] initWithFrame:CGRectMake(0, self.offset + 19.f, SCREENWIDTH, 2)];
+        _progressView.trackTintColor = [UIColor clearColor];
+        _progressView.progressTintColor = self.progressBarColor;
+    }
+    return _progressView;
+}
+
+#pragma mark - Reader Mode
+
+- (void)setupReaderMode {
     // Load reader mode js script
     NSBundle *bundle = [NSBundle bundleForClass:[self class]];
     NSURL *url = [bundle URLForResource:@"PFWebViewController" withExtension:@"bundle"];
@@ -121,7 +216,7 @@
     _readerWebView.layer.masksToBounds = YES;
     
     self.maskLayer = [CALayer layer];
-//    self.maskLayer.backgroundColor = [UIColor clearColor].CGColor;
+    //    self.maskLayer.backgroundColor = [UIColor clearColor].CGColor;
     self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, 0.0f);
     self.maskLayer.borderWidth = _readerWebView.height / 2.0f;
     self.maskLayer.anchorPoint = CGPointMake(0.5, 1.0f);
@@ -129,87 +224,6 @@
     [_readerWebView.layer setMask:self.maskLayer];
     
     [self.view addSubview:_readerWebView];
-    
-    [self.toolbar setup];
-    
-    [self loadWebContent];
-}
-
-- (void)loadWebContent {
-    if (self.url) {
-        [self.webView loadRequest:[NSURLRequest requestWithURL:self.url]];
-        return;
-    }
-}
-
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
-    [self.webView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:nil];
-    [self.webView addObserver:self forKeyPath:@"canGoBack" options:NSKeyValueObservingOptionNew context:nil];
-    [self.webView addObserver:self forKeyPath:@"canGoForward" options:NSKeyValueObservingOptionNew context:nil];
-    [self.webView addObserver:self forKeyPath:@"URL" options:NSKeyValueObservingOptionNew context:nil];
-    
-    if (self.navigationController) {
-        isNavigationBarHidden = self.navigationController.navigationBar.hidden;
-        [self.navigationController setNavigationBarHidden:YES];
-    }
-}
-
-- (void)viewWillDisappear:(BOOL)animated {
-    [super viewWillDisappear:animated];
-    [self.webView removeObserver:self forKeyPath:@"estimatedProgress"];
-    [self.webView removeObserver:self forKeyPath:@"canGoBack"];
-    [self.webView removeObserver:self forKeyPath:@"canGoForward"];
-    [self.webView removeObserver:self forKeyPath:@"URL"];
-    
-    if (self.navigationController) {
-        [self.navigationController setNavigationBarHidden:isNavigationBarHidden];
-    }
-}
-
-- (void)viewDidLayoutSubviews {
-    [super viewDidLayoutSubviews];
-    
-    self.offset = SCREENWIDTH < SCREENHEIGHT ? 20.f : 0.f;
-    
-    self.webView.frame = CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset);
-    self.navigationHeader.frame = CGRectMake(0, 0, SCREENWIDTH, self.offset + 20.5f);
-    self.toolbar.frame = CGRectMake(0, SCREENHEIGHT - 50.5f, SCREENWIDTH, 50.5f);
-    self.progressView.frame = CGRectMake(0, 19 + self.offset, SCREENWIDTH, 2);
-}
-
-#pragma mark - Lazy Initialize
-
-//- (WKWebView *)webView {
-//    if (!_webView) {
-//        _webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset)];
-//        _webView.allowsBackForwardNavigationGestures = YES;
-//    }
-//    return _webView;
-//}
-
-- (PFWebViewNavigationHeader *)navigationHeader {
-    if (!_navigationHeader) {
-        _navigationHeader = [[PFWebViewNavigationHeader alloc] initWithURL:self.url];
-    }
-    return _navigationHeader;
-}
-
-- (PFWebViewToolBar *)toolbar {
-    if (!_toolbar) {
-        _toolbar = [[PFWebViewToolBar alloc] initWithFrame:CGRectMake(0, SCREENHEIGHT - 50.5f, SCREENWIDTH, 50.5f)];
-        _toolbar.delegate = self;
-    }
-    return _toolbar;
-}
-
-- (UIProgressView *)progressView {
-    if (!_progressView) {
-        _progressView = [[UIProgressView alloc] initWithFrame:CGRectMake(0, self.offset + 19.f, SCREENWIDTH, 2)];
-        _progressView.trackTintColor = [UIColor clearColor];
-        _progressView.progressTintColor = self.progressBarColor;
-    }
-    return _progressView;
 }
 
 #pragma mark - KVO
