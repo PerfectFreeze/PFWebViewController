@@ -16,8 +16,8 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "PFWebViewController"
-  s.version      = "1.0.1"
-  s.summary      = "A light-weight webview controller using WKWebView."
+  s.version      = "1.1.0"
+  s.summary      = "A light-weight webview controller using WKWebView. Support Safari-like reader mode."
 
   # This description is used to generate tags and improve search results.
   #   * Think: What does it do? Why did you write it? What is the focus?
@@ -26,6 +26,8 @@ Pod::Spec.new do |s|
   #   * Finally, don't worry about the indent, CocoaPods strips it!
   s.description  = <<-DESC
                    A light-weight webview controller using WKWebView. It contains a progress bar and can estimate loading time.
+                   
+                   Support Safari-like reader mode. 
                    
                    Easy use and less memory consuming than [RxWebViewController](https://github.com/Roxasora/RxWebViewController).
                    DESC
