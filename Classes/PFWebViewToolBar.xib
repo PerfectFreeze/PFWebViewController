@@ -20,6 +20,7 @@
                 <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="BsK-Sa-L9X">
                     <subviews>
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="HD6-Yi-Ywl">
+                            <state key="normal" image="PFWebViewController.bundle/icon_close"/>
                             <connections>
                                 <action selector="close:" destination="iN0-l3-epB" eventType="touchUpInside" id="jIs-c3-K7U"/>
                             </connections>
@@ -37,6 +38,7 @@
                             </connections>
                         </button>
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hiS-BT-fo1">
+                            <state key="normal" image="PFWebViewController.bundle/icon_read"/>
                             <connections>
                                 <action selector="switchReaderMode:" destination="iN0-l3-epB" eventType="touchUpInside" id="Wi4-FL-QiX"/>
                             </connections>
@@ -85,7 +87,9 @@
     </objects>
     <resources>
         <image name="PFWebViewController.bundle/icon_back" width="14" height="14"/>
+        <image name="PFWebViewController.bundle/icon_close" width="14" height="14"/>
         <image name="PFWebViewController.bundle/icon_next" width="14" height="14"/>
+        <image name="PFWebViewController.bundle/icon_read" width="14" height="14"/>
         <image name="PFWebViewController.bundle/icon_safari" width="14" height="14"/>
     </resources>
 </document>

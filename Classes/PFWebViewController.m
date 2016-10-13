@@ -74,60 +74,7 @@
     [self.view addSubview:self.toolbar];
     [self.view addSubview:self.progressView];
     
-    // Load reader mode js script
-    NSBundle *bundle = [NSBundle bundleForClass:[self class]];
-    NSURL *url = [bundle URLForResource:@"PFWebViewController" withExtension:@"bundle"];
-    NSBundle *imageBundle = [NSBundle bundleWithURL:url];
-
-    NSString *readerScriptFilePath = [imageBundle pathForResource:@"safari-reader" ofType:@"js"];
-    NSString *readerCheckScriptFilePath = [imageBundle pathForResource:@"safari-reader-check" ofType:@"js"];
-
-    NSString *indexPageFilePath = [imageBundle pathForResource:@"index" ofType:@"html"];
-    
-    // Load HTML for reader mode
-    readerHTMLString = [[NSString alloc] initWithContentsOfFile:indexPageFilePath encoding:NSUTF8StringEncoding error:nil];
-    
-    NSString *script = [[NSString alloc] initWithContentsOfFile:readerScriptFilePath encoding:NSUTF8StringEncoding error:nil];
-    WKUserScript *userScript = [[WKUserScript alloc] initWithSource:script injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:NO];
-    
-    NSString *check_script = [[NSString alloc] initWithContentsOfFile:readerCheckScriptFilePath encoding:NSUTF8StringEncoding error:nil];
-    WKUserScript *check_userScript = [[WKUserScript alloc] initWithSource:check_script injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:NO];
-    
-    WKUserContentController *userContentController = [[WKUserContentController alloc] init];
-    [userContentController addUserScript:userScript];
-    [userContentController addUserScript:check_userScript];
-    [userContentController addScriptMessageHandler:self name:@"JSController"];
-
-    WKWebViewConfiguration *configuration = [[WKWebViewConfiguration alloc] init];
-    configuration.userContentController = userContentController;
-    
-    self.webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset) configuration:configuration];
-    _webView.allowsBackForwardNavigationGestures = YES;
-    _webView.navigationDelegate = self;
-    [self.view addSubview:_webView];
-    
-    isReaderMode = NO;
-    
-    self.webMaskView = [[UIView alloc]initWithFrame:self.webView.frame];
-    _webMaskView.backgroundColor = [UIColor clearColor];
-    _webMaskView.userInteractionEnabled = NO;
-    
-    [self.view addSubview:self.webMaskView];
-
-    
-    self.readerWebView = [[WKWebView alloc] initWithFrame:self.webView.bounds configuration:configuration];
-    _readerWebView.allowsBackForwardNavigationGestures = NO;
-    _readerWebView.navigationDelegate = self;
-    _readerWebView.userInteractionEnabled = NO;
-    _readerWebView.layer.masksToBounds = YES;
-    
-    self.maskLayer = [CAShapeLayer layer];
-    self.maskLayer.frame = _readerWebViewBackgroundView.bounds;
-    
-    [_readerWebView.layer setMask:self.maskLayer];
-    
-    [self.view addSubview:_readerWebView];
-    
+    [self setupReaderMode];
     [self.toolbar setup];
     
     [self loadWebContent];
@@ -174,6 +121,16 @@
     self.navigationHeader.frame = CGRectMake(0, 0, SCREENWIDTH, self.offset + 20.5f);
     self.toolbar.frame = CGRectMake(0, SCREENHEIGHT - 50.5f, SCREENWIDTH, 50.5f);
     self.progressView.frame = CGRectMake(0, 19 + self.offset, SCREENWIDTH, 2);
+    
+    self.webView.frame = CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset);
+    self.webMaskView.frame = self.webView.frame;
+    self.readerWebView.frame = self.webView.bounds;
+    self.maskLayer.frame = self.readerWebViewBackgroundView.bounds;
+    
+    [_readerWebView.layer setMask:self.maskLayer];
+    
+    [self.view addSubview:_readerWebView];
+
 }
 
 #pragma mark - Lazy Initialize
@@ -208,6 +165,64 @@
         _progressView.progressTintColor = self.progressBarColor;
     }
     return _progressView;
+}
+
+#pragma mark - Reader Mode
+
+- (void)setupReaderMode {
+    // Load reader mode js script
+    NSBundle *bundle = [NSBundle bundleForClass:[self class]];
+    NSURL *url = [bundle URLForResource:@"PFWebViewController" withExtension:@"bundle"];
+    NSBundle *imageBundle = [NSBundle bundleWithURL:url];
+    
+    NSString *readerScriptFilePath = [imageBundle pathForResource:@"safari-reader" ofType:@"js"];
+    NSString *readerCheckScriptFilePath = [imageBundle pathForResource:@"safari-reader-check" ofType:@"js"];
+    
+    NSString *indexPageFilePath = [imageBundle pathForResource:@"index" ofType:@"html"];
+    
+    // Load HTML for reader mode
+    readerHTMLString = [[NSString alloc] initWithContentsOfFile:indexPageFilePath encoding:NSUTF8StringEncoding error:nil];
+    
+    NSString *script = [[NSString alloc] initWithContentsOfFile:readerScriptFilePath encoding:NSUTF8StringEncoding error:nil];
+    WKUserScript *userScript = [[WKUserScript alloc] initWithSource:script injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:NO];
+    
+    NSString *check_script = [[NSString alloc] initWithContentsOfFile:readerCheckScriptFilePath encoding:NSUTF8StringEncoding error:nil];
+    WKUserScript *check_userScript = [[WKUserScript alloc] initWithSource:check_script injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:NO];
+    
+    WKUserContentController *userContentController = [[WKUserContentController alloc] init];
+    [userContentController addUserScript:userScript];
+    [userContentController addUserScript:check_userScript];
+    [userContentController addScriptMessageHandler:self name:@"JSController"];
+    
+    WKWebViewConfiguration *configuration = [[WKWebViewConfiguration alloc] init];
+    configuration.userContentController = userContentController;
+    
+    self.webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset) configuration:configuration];
+    _webView.allowsBackForwardNavigationGestures = YES;
+    _webView.navigationDelegate = self;
+    [self.view addSubview:_webView];
+    
+    isReaderMode = NO;
+    
+    self.webMaskView = [[UIView alloc]initWithFrame:self.webView.frame];
+    _webMaskView.backgroundColor = [UIColor clearColor];
+    _webMaskView.userInteractionEnabled = NO;
+    
+    [self.view addSubview:self.webMaskView];
+    
+    
+    self.readerWebView = [[WKWebView alloc] initWithFrame:self.webView.bounds configuration:configuration];
+    _readerWebView.allowsBackForwardNavigationGestures = NO;
+    _readerWebView.navigationDelegate = self;
+    _readerWebView.userInteractionEnabled = NO;
+    _readerWebView.layer.masksToBounds = YES;
+    
+    self.maskLayer = [CAShapeLayer layer];
+    self.maskLayer.frame = _readerWebViewBackgroundView.bounds;
+    
+    [_readerWebView.layer setMask:self.maskLayer];
+    
+    [self.view addSubview:_readerWebView];
 }
 
 #pragma mark - KVO
