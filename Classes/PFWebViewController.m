@@ -128,13 +128,34 @@
 
 #pragma mark - Lazy Initialize
 
-//- (WKWebView *)webView {
-//    if (!_webView) {
-//        _webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset)];
-//        _webView.allowsBackForwardNavigationGestures = YES;
-//    }
-//    return _webView;
-//}
+- (WKWebView *)webView {
+    if (!_webView) {
+        _webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset) configuration:[self configuration]];
+        _webView.allowsBackForwardNavigationGestures = YES;
+        _webView.navigationDelegate = self;
+    }
+    return _webView;
+}
+
+- (UIView *)webMaskView {
+    if (!_webMaskView) {
+        _webMaskView = [[UIView alloc] initWithFrame:self.webView.frame];
+        _webMaskView.backgroundColor = [UIColor clearColor];
+        _webMaskView.userInteractionEnabled = NO;
+    }
+    return _webMaskView;
+}
+
+- (WKWebView *)readerWebView {
+    if (!_readerWebView) {
+        _readerWebView = [[WKWebView alloc] initWithFrame:self.webView.frame configuration:[self configuration]];
+        _readerWebView.allowsBackForwardNavigationGestures = NO;
+        _readerWebView.navigationDelegate = self;
+        _readerWebView.userInteractionEnabled = NO;
+        _readerWebView.layer.masksToBounds = YES;
+    }
+    return _readerWebView;
+}
 
 - (PFWebViewNavigationHeader *)navigationHeader {
     if (!_navigationHeader) {
@@ -163,62 +184,18 @@
 #pragma mark - Reader Mode
 
 - (void)setupReaderMode {
-    // Load reader mode js script
-    NSBundle *bundle = [NSBundle bundleForClass:[self class]];
-    NSURL *url = [bundle URLForResource:@"PFWebViewController" withExtension:@"bundle"];
-    NSBundle *imageBundle = [NSBundle bundleWithURL:url];
-    
-    NSString *readerScriptFilePath = [imageBundle pathForResource:@"safari-reader" ofType:@"js"];
-    NSString *readerCheckScriptFilePath = [imageBundle pathForResource:@"safari-reader-check" ofType:@"js"];
-    
-    NSString *indexPageFilePath = [imageBundle pathForResource:@"index" ofType:@"html"];
-    
-    // Load HTML for reader mode
-    readerHTMLString = [[NSString alloc] initWithContentsOfFile:indexPageFilePath encoding:NSUTF8StringEncoding error:nil];
-    
-    NSString *script = [[NSString alloc] initWithContentsOfFile:readerScriptFilePath encoding:NSUTF8StringEncoding error:nil];
-    WKUserScript *userScript = [[WKUserScript alloc] initWithSource:script injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:NO];
-    
-    NSString *check_script = [[NSString alloc] initWithContentsOfFile:readerCheckScriptFilePath encoding:NSUTF8StringEncoding error:nil];
-    WKUserScript *check_userScript = [[WKUserScript alloc] initWithSource:check_script injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:NO];
-    
-    WKUserContentController *userContentController = [[WKUserContentController alloc] init];
-    [userContentController addUserScript:userScript];
-    [userContentController addUserScript:check_userScript];
-    [userContentController addScriptMessageHandler:self name:@"JSController"];
-    
-    WKWebViewConfiguration *configuration = [[WKWebViewConfiguration alloc] init];
-    configuration.userContentController = userContentController;
-    
-    self.webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, self.offset + 20.5f, SCREENWIDTH, SCREENHEIGHT - 50.5f - 20.5f - self.offset) configuration:configuration];
-    _webView.allowsBackForwardNavigationGestures = YES;
-    _webView.navigationDelegate = self;
-    [self.view addSubview:_webView];
-    
     isReaderMode = NO;
-    
-    self.webMaskView = [[UIView alloc]initWithFrame:self.webView.frame];
-    _webMaskView.backgroundColor = [UIColor clearColor];
-    _webMaskView.userInteractionEnabled = NO;
-    
+    [self.view addSubview:self.webView];
     [self.view addSubview:self.webMaskView];
-    
-    
-    self.readerWebView = [[WKWebView alloc] initWithFrame:self.webView.frame configuration:configuration];
-    _readerWebView.allowsBackForwardNavigationGestures = NO;
-    _readerWebView.navigationDelegate = self;
-    _readerWebView.userInteractionEnabled = NO;
-    _readerWebView.layer.masksToBounds = YES;
-    
+
     self.maskLayer = [CALayer layer];
-    //    self.maskLayer.backgroundColor = [UIColor clearColor].CGColor;
-    self.maskLayer.frame = CGRectMake(0.0f, 0.0f, _readerWebView.width, 0.0f);
-    self.maskLayer.borderWidth = _readerWebView.height / 2.0f;
+    self.maskLayer.frame = CGRectMake(0.0f, 0.0f, self.readerWebView.width, 0.0f);
+    self.maskLayer.borderWidth = self.readerWebView.height / 2.0f;
     self.maskLayer.anchorPoint = CGPointMake(0.5, 1.0f);
     
-    [_readerWebView.layer setMask:self.maskLayer];
+    [self.readerWebView.layer setMask:self.maskLayer];
     
-    [self.view addSubview:_readerWebView];
+    [self.view addSubview:self.readerWebView];
 }
 
 #pragma mark - KVO
@@ -269,6 +246,37 @@
     }
 }
 
+- (WKWebViewConfiguration *)configuration {
+    // Load reader mode js script
+    NSBundle *bundle = [NSBundle bundleForClass:[self class]];
+    NSURL *url = [bundle URLForResource:@"PFWebViewController" withExtension:@"bundle"];
+    NSBundle *imageBundle = [NSBundle bundleWithURL:url];
+    
+    NSString *readerScriptFilePath = [imageBundle pathForResource:@"safari-reader" ofType:@"js"];
+    NSString *readerCheckScriptFilePath = [imageBundle pathForResource:@"safari-reader-check" ofType:@"js"];
+    
+    NSString *indexPageFilePath = [imageBundle pathForResource:@"index" ofType:@"html"];
+    
+    // Load HTML for reader mode
+    readerHTMLString = [[NSString alloc] initWithContentsOfFile:indexPageFilePath encoding:NSUTF8StringEncoding error:nil];
+    
+    NSString *script = [[NSString alloc] initWithContentsOfFile:readerScriptFilePath encoding:NSUTF8StringEncoding error:nil];
+    WKUserScript *userScript = [[WKUserScript alloc] initWithSource:script injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:NO];
+    
+    NSString *check_script = [[NSString alloc] initWithContentsOfFile:readerCheckScriptFilePath encoding:NSUTF8StringEncoding error:nil];
+    WKUserScript *check_userScript = [[WKUserScript alloc] initWithSource:check_script injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:NO];
+    
+    WKUserContentController *userContentController = [[WKUserContentController alloc] init];
+    [userContentController addUserScript:userScript];
+    [userContentController addUserScript:check_userScript];
+    [userContentController addScriptMessageHandler:self name:@"JSController"];
+    
+    WKWebViewConfiguration *configuration = [[WKWebViewConfiguration alloc] init];
+    configuration.userContentController = userContentController;
+
+    return configuration;
+}
+
 #pragma mark - PFWebViewToolBarDelegate
 
 - (void)webViewToolbarGoBack:(PFWebViewToolBar *)toolbar {
@@ -297,8 +305,7 @@
     }
 }
 
-- (void)webViewToolbarDidSwitchReaderMode:(PFWebViewToolBar *)toolbar
-{
+- (void)webViewToolbarDidSwitchReaderMode:(PFWebViewToolBar *)toolbar {
     isReaderMode = !isReaderMode;
     if (isReaderMode) {
         [_webView evaluateJavaScript:@"var ReaderArticleFinderJS = new ReaderArticleFinder(document);" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
@@ -362,8 +369,7 @@
 
 #pragma mark - WKWebViewNavigationDelegate Methods
 
-- (void)webView:(WKWebView *)webView didCommitNavigation:(null_unspecified WKNavigation *)navigation
-{
+- (void)webView:(WKWebView *)webView didCommitNavigation:(null_unspecified WKNavigation *)navigation {
     if ([webView isEqual:self.readerWebView]) {
         return;
     }
@@ -380,13 +386,11 @@
     }
 }
 
-- (void)webView:(WKWebView *)webView didFinishNavigation:(null_unspecified WKNavigation *)navigation
-{
+- (void)webView:(WKWebView *)webView didFinishNavigation:(null_unspecified WKNavigation *)navigation {
 }
 
 // 拦截非 Http:// 和 Https:// 开头的请求，转成应用内跳转
--(void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
-{
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
     if ([webView isEqual:self.readerWebView]) {
         decisionHandler(WKNavigationActionPolicyAllow);
         return;
@@ -413,8 +417,7 @@
     }
 }
 
-- (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler
-{
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler {
     if ([webView isEqual:self.readerWebView]) {
         decisionHandler(WKNavigationResponsePolicyAllow);
         return;
@@ -436,8 +439,7 @@
 }
 
 - (void)userContentController:(WKUserContentController *)userContentController
-      didReceiveScriptMessage:(WKScriptMessage *)message
-{
+      didReceiveScriptMessage:(WKScriptMessage *)message {
     _readerWebView.alpha = 1.0f;
     
     dispatch_async(dispatch_get_main_queue(), ^{
