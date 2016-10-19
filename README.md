@@ -13,6 +13,24 @@
 
 - Support Safari-like reader mode.
 
+## Screenshots
+
+### Loading
+
+![Loading](Screenshots/Loading.png)
+
+### Main Screen
+
+![Main Screen](Screenshots/GitHub_1.png)
+
+![Main Screen](Screenshots/GitHub_2.png)
+
+### Reader Mode
+
+![Reader Mode Off](Screenshots/Reader_Mode_1.png)
+
+![Reader Mode On](Screenshots/Reader_Mode_2.png)
+
 ## Installation
 
 ### Using Carthage
