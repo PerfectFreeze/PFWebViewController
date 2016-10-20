@@ -324,7 +324,8 @@
                     NSRange t = [mut_str rangeOfString:@"<div id=\"article\" role=\"article\">"];
                     NSInteger location = t.location + t.length;
                     
-                    [mut_str insertString:object atIndex:location];
+                    NSString *t_object = [NSString stringWithFormat:@"<div style=\"position: absolute; top: -999em\">%@</div>",object];
+                    [mut_str insertString:t_object atIndex:location];
                     
                     [_readerWebView loadHTMLString:mut_str baseURL:self.url];
                     _readerWebView.alpha = 0.0f;
