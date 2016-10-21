@@ -1,1899 +1,1039 @@
 /*
- * Copyright © 2010 Apple Inc. All rights reserved.
- * DOWNLOAD FROM: http://blog.manbolo.com/2013/03/18/safari-reader-source-code 
+ * Copyright (c) 2010 Apple Inc. All rights reserved.
  */
-const ReaderMinimumScore = 1600;
-const ReaderMinimumAdvantage = 15;
-const ArticleMinimumScoreDensity = 4.25;
-var BlacklistedHostsAllowedPathPrefixesMap = {};
-BlacklistedHostsAllowedPathPrefixesMap["www.apple.com"] = ["/pr/"];
-const CandidateMinimumWidth = 280;
-const CandidateMinimumHeight = 295;
-const CandidateMinimumArea = 170000;
-const CandidateMaximumTop = 1300;
-const CandidateMinimumWidthPortionForIndicatorElements = 0.5;
-const CandidateMinumumListItemLineCount = 4;
-const CandidateTagNamesToIgnore = {
-    "A": 1,
-    "BODY": 1,
-    "EMBED": 1,
-    "FORM": 1,
-    "HTML": 1,
-    "IFRAME": 1,
-    "OBJECT": 1,
-    "OPTION": 1,
-    "SCRIPT": 1,
-    "STYLE": 1,
-    "svg": 1
-};
-const CandidateTagNamesToIgnoreDescendantsOf = {
-    "DD": 1,
-    "DT": 1,
-    "LI": 1,
-    "OL": 1,
-    "UL": 1
-};
-
-function shouldIgnoreElementBySelfOrAncestorTagName(element) {
-    if (CandidateTagNamesToIgnore[element.tagName])
-        return true;
-    for (var ancestor = element; ancestor; ancestor = ancestor.parentNode)
-        if (CandidateTagNamesToIgnoreDescendantsOf[ancestor.tagName])
-            return true;
-    return false;
+function articleHeight() {
+    var e = document.getElementById("article").offsetHeight,
+    t = parseFloat(getComputedStyle(document.getElementById("article")).marginTop);
+    return e + 2 * t
 }
-const PrependedArticleCandidateMinimumHeight = 50;
-const AppendedArticleCandidateMinimumHeight = 200;
-const AppendedArticleCandidateMaximumVerticalDistanceFromArticle = 150;
-const StylisticClassNames = {
-    "justfy": 1,
-    "justify": 1,
-    "left": 1,
-    "right": 1,
-    "small": 1
-};
-const CommentRegEx = /comment|meta|footer|footnote/;
-const CommentMatchPenalty = 0.5;
-const ArticleRegEx = /(?:(?:^|\\s)(?:post|hentry|entry[-]?(?:content|text|body)?|article[-]?(?:content|text|body)?)(?:\\s|$))/;
-const ArticleMatchBonus = 0.5;
-const DensityExcludedElementSelector = "#disqus_thread, #comments, .userComments";
-const AttributesToRemoveRegEx = /^on|^id$|^class$|^style$/;
-const PositiveRegEx = /article|body|content|entry|hentry|page|pagination|post|text/i;
-const NegativeRegEx = /breadcrumb|combx|comment|contact|disqus|foot|footer|footnote|link|media|meta|mod-conversations|promo|related|scroll|share|shoutbox|sidebar|social|sponsor|tags|toolbox|widget/i;
-const MinimumAverageDistanceBetweenHRElements = 400;
-const MinimumAverageDistanceBetweenHeaderElements = 400;
-const PortionOfCandidateHeightToIgnoreForHeaderCheck = 0.1;
-const ScoreMultiplierForChineseJapaneseKorean = 3;
-const MinimumContentImageHeight = 200;
-const MinimumContentImageWidthToArticleWidthRatio = 0.5;
-const MaximumContentImageAreaToArticleAreaRatio = 0.2;
-const LinkContinueMatchRegEx = /continue/gi;
-const LinkNextMatchRegEx = /next/gi;
-const LinkPageMatchRegEx = /page/gi;
-const LinkListItemBonus = 5;
-const LinkPageMatchBonus = 10;
-const LinkNextMatchBonus = 15;
-const LinkContinueMatchBonus = 15;
-const LinkNextOrdinalValueBase = 3;
-const LinkMismatchValueBase = 2;
-const LinkMatchWeight = 200;
-const LinkMaxVerticalDistanceFromArticle = 200;
-const LinkVerticalDistanceFromArticleWeight = 150;
-const LinkCandidateXPathQuery = "descendant-or-self::*[(not(@id) or (@id!='disqus_thread' and @id!='comments')) and (not(@class) or @class!='userComments')]/a";
-const LinkDateRegex = /\D(?:\d\d(?:\d\d)?[\-\/](?:10|11|12|0?[1-9])[\-\/](?:30|31|[12][0-9]|0?[1-9])|\d\d(?:\d\d)?\/(?:10|11|12|0[1-9])|(?:10|11|12|0?[1-9])\-(?:30|31|[12][0-9]|0?[1-9])\-\d\d(?:\d\d)?|(?:30|31|[12][0-9]|0?[1-9])\-(?:10|11|12|0?[1-9])\-\d\d(?:\d\d)?)\D/;
-const LinkURLSearchParameterKeyMatchRegex = /(page|^p$|^pg$)/i;
-const LinkURLPageSlashNumberMatchRegex = /\/.*page.*\/\d+/i;
-const LinkURLSlashDigitEndMatchRegex = /\/\d+\/?$/;
-const LinkURLArchiveSlashDigitEndMatchRegex = /archives?\/\d+\/?$/;
-const LinkURLBadSearchParameterKeyMatchRegex = /feed/;
-const LinkURLSemanticMatchBonus = 100;
-const LinkMinimumURLSimilarityRatio = 0.75;
-const HeaderMinimumDistanceFromArticleTop = 200;
-const HeaderLevenshteinDistanceToLengthRatio = 0.75;
-const FloatMinimumHeight = 130;
-const ImageSizeTiny = 32;
-const ImageWidthToParentWidthRatio = .5;
-const AnchorImageMinimumWidth = 100;
-const AnchorImageMinimumHeight = 100;
-const BaseFontSize = 30;
-const BaseLineHeightRatio = 1.125;
-const MaximumExactIntegralValue = 9007199254740992;
-const TitleCandidateDepthScoreMultiplier = 0.1;
-const DocumentPositionDisconnected = 0x01;
-const DocumentPositionPreceding = 0x02;
-const DocumentPositionFollowing = 0x04;
-const DocumentPositionContains = 0x08;
-const DocumentPositionContainedBy = 0x10;
-
-function characterNeedsScoreMultiplier(character) {
-    if (!character || character.length == 0)
-        return false;
-    var characterCode = character.charCodeAt(0);
-    if (characterCode > 11904 && characterCode < 12031)
-        return true;
-    if (characterCode > 12352 && characterCode < 12543)
-        return true;
-    if (characterCode > 12736 && characterCode < 19903)
-        return true;
-    if (characterCode > 19968 && characterCode < 40959)
-        return true;
-    if (characterCode > 44032 && characterCode < 55215)
-        return true;
-    if (characterCode > 63744 && characterCode < 64255)
-        return true;
-    if (characterCode > 65072 && characterCode < 65103)
-        return true;
-    if (characterCode > 131072 && characterCode < 173791)
-        return true;
-    if (characterCode > 194560 && characterCode < 195103)
-        return true;
-    return false;
+function smoothScroll(e, t, n, i) {
+    function a(t, n) {
+        scrollEventIsSmoothScroll = !0, e.scrollTop = n, setTimeout(function() {
+                                                                    scrollEventIsSmoothScroll = !1
+                                                                    }, 0)
+    }
+    const o = 1e3 / 60;
+    var r = e.scrollTop,
+    s = r + t,
+    l = 0,
+    d = articleHeight() - window.innerHeight;
+    if (l > s && (s = l), s > d && (s = d), r != s) {
+        var c = Math.abs(s - r);
+        if (c < Math.abs(t) && (n = n * c / Math.abs(t)), smoothScrollingAnimator) {
+            var u = smoothScrollingAnimator.animations[0],
+            m = u.progress,
+            g = m > .5 ? 1 - m : m,
+            h = n / (1 - g),
+            p = -g * h,
+            f = s - r,
+            S = (.5 * f * Math.PI * Math.sin(Math.PI * m), Math.sin(Math.PI / 2 * g)),
+            C = S * S,
+            x = (r - s * C) / (1 - C);
+            return abortSmoothScroll(), smoothScrollingAnimator = new AppleAnimator(h, o, i), smoothScrollingAnimation = new AppleAnimation(x, s, a), smoothScrollingAnimator.addAnimation(smoothScrollingAnimation), void smoothScrollingAnimator.start(p)
+        }
+        smoothScrollingAnimator = new AppleAnimator(n, o, i), smoothScrollingAnimation = new AppleAnimation(r, s, a), smoothScrollingAnimator.addAnimation(smoothScrollingAnimation), smoothScrollingAnimator.start()
+    }
 }
-
-function domDistance(elementA, elementB, distanceCap) {
-    var ancestorsA = [];
-    var node = elementA;
-    while (node) {
-        ancestorsA.unshift(node);
-        node = node.parentNode;
+function abortSmoothScroll() {
+    smoothScrollingAnimator.stop(AnimationTerminationCondition.Interrupted), smoothScrollingAnimator = null, smoothScrollingAnimation = null
+}
+function articleScrolled() {
+    !scrollEventIsSmoothScroll && smoothScrollingAnimator && abortSmoothScroll()
+}
+function traverseReaderContent(e, t) {
+    if (e) {
+        var n = e.offsetTop,
+        i = document.createTreeWalker(document.getElementById("article"), NodeFilter.SHOW_ELEMENT, {
+                                      acceptNode: function(e) {
+                                      var t = e.classList;
+                                      return t.contains("page-number") || t.contains("float") || t.contains("page") || t.contains("scrollable") || "HR" === e.tagName || 0 === e.offsetHeight || "inline" === getComputedStyle(e).display || n === e.offsetTop ? NodeFilter.FILTER_SKIP : NodeFilter.FILTER_ACCEPT
+                                      }
+                                      });
+        return i.currentNode = e, i[t]()
     }
-    var ancestorsB = [];
-    node = elementB;
-    while (node) {
-        ancestorsB.unshift(node);
-        node = node.parentNode;
-    }
-    var shallowerDepth = Math.min(ancestorsA.length, ancestorsB.length);
-    var domDistance = Math.abs(ancestorsA.length - ancestorsB.length);
-    for (var i = shallowerDepth; i >= 0; i--) {
-        if (ancestorsA[i] === ancestorsB[i])
+}
+function nextReaderContentElement(e) {
+    return traverseReaderContent(e, "nextNode")
+}
+function previousReaderContentElement(e) {
+    return traverseReaderContent(e, "previousNode")
+}
+function articleTitleElement() {
+    return document.querySelector("#article .page .title")
+}
+function keyDown(e) {
+    var t = !(e.metaKey || e.altKey || e.ctrlKey || e.shiftKey),
+    n = !e.metaKey && !e.altKey && !e.ctrlKey && e.shiftKey;
+    switch (e.keyCode) {
+        case 8:
             break;
-        domDistance += 2;
-        if (distanceCap && domDistance >= distanceCap)
-            return distanceCap;
+        case 74:
+            ContentAwareScrollerJS.scroll(ContentAwareNavigationDirection.Down);
+            break;
+        case 75:
+            ContentAwareScrollerJS.scroll(ContentAwareNavigationDirection.Up)
     }
-    return domDistance;
 }
-
-function fontSizeFromComputedStyle(style, fallbackSize) {
-    var fontSize = parseInt(style.fontSize);
-    if (isNaN(fontSize))
-        fontSize = fallbackSize ? fallbackSize : BaseFontSize;
-    return fontSize;
-}
-
-function contentTextStyleForNode(contentDocument, node, searchInReverse) {
-    function getComputedStyleIfNodeIsBodyText(textNode) {
-        if (isNodeWhitespace(textNode))
-            return null;
-        var style = getComputedStyle(textNode.parentNode);
-        if (style.float !== "none")
-            return null;
-        return style;
-    }
-    var nonHeaderTextXPathQuery = "descendant::text()[not(parent::h1) and not(parent::h2) and not(parent::h3) and not(parent::h4) and not(parent::h5) and not(parent::h6)]";
-    var articleTextNodes = contentDocument.evaluate(nonHeaderTextXPathQuery, node, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-    if (searchInReverse) {
-        for (var nodeIndex = articleTextNodes.snapshotLength - 1; nodeIndex >= 0; nodeIndex--) {
-            var style = getComputedStyleIfNodeIsBodyText(articleTextNodes.snapshotItem(nodeIndex));
-            if (style)
-                return style;
-        }
-    } else {
-        for (var nodeIndex = 0; nodeIndex < articleTextNodes.snapshotLength; nodeIndex++) {
-            var style = getComputedStyleIfNodeIsBodyText(articleTextNodes.snapshotItem(nodeIndex));
-            if (style)
-                return style;
+function getArticleScrollPosition() {
+    scrollInfo = {}, scrollInfo.version = 1;
+    var e = document.getElementsByClassName("page");
+    if (!e.length)
+        return scrollInfo.pageIndex = 0, scrollInfo;
+    scrollInfo.pageIndex = e.length - 1;
+    var t,
+    n = window.scrollY;
+    for (t = 0; t < e.length; t++) {
+        var i = e[t];
+        if (i.offsetTop + i.offsetHeight >= n) {
+            scrollInfo.pageIndex = t;
+            break
         }
     }
-    return null;
+    return scrollInfo
 }
-
-function isNodeWhitespace(node) {
-    if (!node || node.nodeType !== Node.TEXT_NODE)
-        return false;
-    return !/\S/.test(node.data);
+function restoreInitialArticleScrollPosition() {
+    var e = document.getElementsByClassName("page"),
+    t = e[initialScrollPosition.pageIndex];
+    t && (document.body.scrollTop = t.offsetTop)
 }
-
-function removeWhitespace(string) {
-    return string.replace(/\s+/g, '');
-}
-
-function isElementNode(node) {
-    if (node && node.nodeType === Node.ELEMENT_NODE)
-        return true;
-    return false;
-}
-
-function isElementVisible(element) {
-    var style = getComputedStyle(element);
-    if (style.visibility !== "visible" || style.display === "none")
-        return false;
-    if (!cachedElementBoundingRect(element).height)
-        return false;
-    return true;
-}
-
-function elementDepth(element) {
-    var depth = 0;
-    while (element) {
-        element = element.parentElement;
-        depth++;
+function restoreInitialArticleScrollPositionIfPossible() {
+    if (!didRestoreInitialScrollPosition) {
+        if (!initialScrollPosition)
+            return void (didRestoreInitialScrollPosition = !0);
+        var e = document.getElementsByClassName("page-number").length;
+        initialScrollPosition.pageIndex >= e || (setTimeout(restoreInitialArticleScrollPosition, DelayBeforeRestoringScrollPositionInMs), didRestoreInitialScrollPosition = !0)
     }
-    return depth;
 }
-
-function elementHasAncestorWithTagName(element, tagName) {
-    var node = element;
-    while (node.parentNode) {
-        node = node.parentNode;
-        if (node.tagName === tagName)
-            return true;
-    }
-    return false;
-}
-
-function cachedElementBoundingRect(element) {
-    if (element._cachedElementBoundingRect)
-        return element._cachedElementBoundingRect;
-    var rect = element.getBoundingClientRect();
-    ReaderArticleFinderJS._elementsWithCachedBoundingRects.push(element);
-    if (!ReaderArticleFinderJS._cachedScrollY && !ReaderArticleFinderJS._cachedScrollY) {
-        element._cachedElementBoundingRect = rect;
-        return element._cachedElementBoundingRect;
-    }
-    element._cachedElementBoundingRect = {
-        top: rect.top + ReaderArticleFinderJS._cachedScrollY,
-        right: rect.right - ReaderArticleFinderJS._cachedScrollX,
-        bottom: rect.bottom - ReaderArticleFinderJS._cachedScrollY,
-        left: rect.left + ReaderArticleFinderJS._cachedScrollX,
-        width: rect.width,
-        height: rect.height
-    };
-    return element._cachedElementBoundingRect;
-}
-
-function clearCachedElementBoundingRects() {
-    var elementsWithRects = ReaderArticleFinderJS._elementsWithCachedBoundingRects;
-    var elementCount = elementsWithRects.length;
-    for (var i = 0; i < elementCount; i++)
-        elementsWithRects[i]._cachedElementBoundingRect = null;
-    ReaderArticleFinderJS._elementsWithCachedBoundingRects = [];
-}
-
-function innerTextOrTextContent(element) {
-    var text = element.innerText;
-    if (!text)
-        text = element.textContent;
-    return text;
-}
-
-function levenshteinDistance(s, t) {
-    var m = s.length;
-    var n = t.length;
-    var d = new Array(m + 1);
-    for (var i = 0; i < m + 1; i++) {
-        d[i] = new Array(n + 1);
-        d[i][0] = i;
-    }
-    for (var j = 0; j < n + 1; j++)
-        d[0][j] = j;
-    for (var j = 1; j < n + 1; j++) {
-        for (var i = 1; i < m + 1; i++) {
-            if (s[i - 1] === t[j - 1])
-                d[i][j] = d[i - 1][j - 1];
-            else {
-                var deletion = d[i - 1][j] + 1;
-                var insertion = d[i][j - 1] + 1;
-                var substitution = d[i - 1][j - 1] + 1;
-                d[i][j] = Math.min(deletion, insertion, substitution);
-            }
+function makeWideElementsScrollable() {
+    for (var e = document.querySelectorAll("table, pre"), t = e.length, n = 0; t > n; ++n) {
+        var i = e[n];
+        if (!i.classList.contains("float") && !i.parentElement.classList.contains("scrollable")) {
+            var a = document.createElement("div");
+            i.parentElement.insertBefore(a, i), i.remove(), a.insertBefore(i), a.classList.add("scrollable")
         }
     }
-    return d[m][n];
 }
-
-function stringSimilarity(s, t) {
-    var maxLength = Math.max(s.length, t.length);
-    return maxLength ? (maxLength - levenshteinDistance(s, t)) / maxLength : 0;
+function loadTwitterJavaScript() {
+    window.twttr = function(e, t, n) {
+        var i,
+        a,
+        o = e.getElementsByTagName(t)[0];
+        if (!e.getElementById(n))
+            return a = e.createElement(t), a.id = n, a.src = "https://platform.twitter.com/widgets.js", o.parentNode.insertBefore(a, o), window.twttr || (i = {
+                                                                                                                                                          _e: [],
+                                                                                                                                                          ready: function(e) {
+                                                                                                                                                          i._e.push(e)
+                                                                                                                                                          }
+                                                                                                                                                          })
+            }(document, "script", "twitter-wjs")
 }
-CandidateElement = function (element, contentDocument) {
-    this.element = element
-    this.contentDocument = contentDocument;
-    this.textNodes = this.usableTextNodesInElement(this.element);
-    this.rawScore = this.calculateRawScore();
-    this.regExBonusMultiplier = this.calculateRegExBonus();
-    this.languageScoreMultiplier = 0;
-    this.depthInDocument = 0;
+function richTweetWasCreated(e) {
+    var t = e.parentNode.querySelector(".simple-tweet");
+    t.classList.add("hidden")
 }
-CandidateElement.extraArticleCandidateIfElementIsViable = function extraArticleCandidateIfElementIsViable(element, selectedArticle, contentDocument, isPrepended) {
-    const InlineTextContainerTagNames = "a, b, strong, i, em, u, span";
-    var documentRect = cachedElementBoundingRect(element);
-    var selectedArticleRect = cachedElementBoundingRect(selectedArticle.element);
-    if ((isPrepended && documentRect.height < PrependedArticleCandidateMinimumHeight) || (!isPrepended && documentRect.height < AppendedArticleCandidateMinimumHeight)) {
-        if (element.childElementCount && element.querySelectorAll("*").length != element.querySelectorAll(InlineTextContainerTagNames).length)
-            return null;
+function replaceSimpleTweetsWithRichTweets() {
+    if (ReaderJS._isJavaScriptEnabled()) {
+        var e = document.querySelectorAll("[data-reader-tweet-id]"),
+        t = e.length;
+        t && (loadTwitterJavaScript(), twttr.ready(function(n) {
+                                                   for (var i = 0; t > i; ++i) {
+                                                   var a = e[i];
+                                                   n.widgets.createTweet(a.getAttribute("data-reader-tweet-id"), a, {
+                                                                         dnt: !0
+                                                                         }).then(richTweetWasCreated)
+                                                   }
+                                                   }))
     }
-    if (isPrepended) {
-        if (documentRect.bottom > selectedArticleRect.top)
-            return null;
-    } else {
-        if (documentRect.top < selectedArticleRect.bottom)
-            return null;
-    }
-    if (!isPrepended) {
-        var distanceFromArticle = documentRect.top - selectedArticleRect.bottom;
-        console.assert(distanceFromArticle > 0, "An appended article node must be below the article");
-        if (distanceFromArticle > AppendedArticleCandidateMaximumVerticalDistanceFromArticle)
-            return null;
-    }
-    var maxDelta = 0.1 * selectedArticleRect.width;
-    if (Math.abs(documentRect.left - selectedArticleRect.left) > maxDelta || Math.abs(documentRect.right - selectedArticle.right) > maxDelta)
-        return null;
-    var candidate = new CandidateElement(element, contentDocument);
-    candidate.isPrepended = isPrepended;
-    return candidate;
 }
-CandidateElement.candidateIfElementIsViable = function candidateIfElementIsViable(element, contentDocument, isForSimilarClass) {
-    var documentRect = cachedElementBoundingRect(element);
-    if (isForSimilarClass)
-        return new CandidateElement(element, contentDocument);
-    if (documentRect.width < CandidateMinimumWidth || documentRect.height < CandidateMinimumHeight)
-        return null;
-    if (documentRect.width * documentRect.height < CandidateMinimumArea)
-        return null;
-    if (documentRect.top > CandidateMaximumTop)
-        return null;
-    if (CandidateElement.candidateElementAdjustedHeight(element) < CandidateMinimumHeight)
-        return null;
-    return new CandidateElement(element, contentDocument);
-}
-CandidateElement.candidateElementAdjustedHeight = function candidateElementAdjustedHeight(element) {
-    var documentRect = cachedElementBoundingRect(element);
-    var adjustedHeight = documentRect.height;
-    var indicatorElements = element.querySelectorAll("form");
-    for (var i = 0; i < indicatorElements.length; i++) {
-        var indicatorElement = indicatorElements[i];
-        var indicatorRect = cachedElementBoundingRect(indicatorElement);
-        if (indicatorRect.width > documentRect.width * CandidateMinimumWidthPortionForIndicatorElements)
-            adjustedHeight -= indicatorRect.height;
+function prepareTweetsInPrintingMailingFrame(e) {
+    for (var t = e.querySelectorAll(".tweet-wrapper"), n = t.length, i = 0; n > i; ++i) {
+        var a = t[i],
+        o = a.querySelector("iframe");
+        o && o.remove();
+        var r = a.querySelector(".simple-tweet");
+        r && r.classList.remove("hidden")
     }
-    var listContainers = element.querySelectorAll("ol, ul");
-    var listContainersCount = listContainers.length;
-    var lastListContainerSubstracted = null;
-    for (var i = 0; i < listContainersCount; i++) {
-        var listContainer = listContainers[i];
-        if (lastListContainerSubstracted && lastListContainerSubstracted.compareDocumentPosition(listContainer) & DocumentPositionContainedBy)
-            continue;
-        var listItems = listContainer.querySelectorAll("li");
-        var listItemCount = listItems.length;
-        var listRect = cachedElementBoundingRect(listContainer);
-        if (!listItemCount) {
-            adjustedHeight -= listRect.height;
-            continue;
+}
+function localeForElement(e) {
+    var t = "en"
+    return "en" && t.length && "und" !== t ? t : "en"
+}
+function anchorForURL(e) {
+    var t = document.createElement("a");
+    return t.href = e, t
+}
+function stopExtendingElementBeyondTextColumn(e) {
+    e.classList.remove("extendsBeyondTextColumn"), e.style.removeProperty("width"), e.style.removeProperty("-webkit-margin-start")
+}
+function leadingMarginAndPaddingAppliedToElementFromAncestors(e) {
+    for (var t = 0, n = e.parentElement; n && !n.classList.contains("page");) {
+        var i = getComputedStyle(n);
+        t += parseFloat(i["-webkit-padding-start"]) + parseFloat(i["-webkit-margin-start"]), n = n.parentElement
+    }
+    return t
+}
+function extendElementBeyondTextColumn(e, t, n) {
+    e.classList.add("extendsBeyondTextColumn"), e.style.setProperty("width", t + "px"), e.style.setProperty("-webkit-margin-start", (n - t) / 2 - leadingMarginAndPaddingAppliedToElementFromAncestors(e) + "px")
+}
+function textSizeIndexIsValid(e) {
+    return "number" == typeof e && e >= MinTextZoomIndex && MaxTextZoomIndex >= e
+}
+function monitorMouseDownForPotentialDeactivation(e) {
+    lastMouseDownWasOutsideOfPaper = e && ReaderAppearanceJS.usesPaperAppearance() && !document.getElementById("article").contains(e.target)
+}
+function deactivateIfEventIsOutsideOfPaperContainer(e) {
+    lastMouseDownWasOutsideOfPaper && e && ReaderAppearanceJS.usesPaperAppearance() && !document.getElementById("article").contains(e.target) && (ReaderJS.readerWillEnterBackground())
+}
+function updatePageNumbers() {
+    for (var e = document.getElementsByClassName("page-number"), t = e.length, n = ReaderJS.isLoadingNextPage(), i = 0; t > i; ++i)
+        n ? e[i].textContent = getLocalizedString("Page %@").format(i + 1) : e[i].textContent = getLocalizedString("Page %@ of %@").format(i + 1, t)
         }
-        var averageListItemHeight = listRect.height / listItemCount;
-        var firstListItemStyle = getComputedStyle(listItems[0]);
-        var listLineHeight = parseInt(firstListItemStyle.lineHeight);
-        if (isNaN(listLineHeight)) {
-            var listFontSize = fontSizeFromComputedStyle(firstListItemStyle);
-            listLineHeight = listFontSize * BaseLineHeightRatio;
-        }
-        if (listRect.width > documentRect.width * CandidateMinimumWidthPortionForIndicatorElements && ((averageListItemHeight / listLineHeight) < CandidateMinumumListItemLineCount)) {
-            adjustedHeight -= listRect.height;
-            lastListContainerSubstracted = listContainer;
-        }
-    }
-    return adjustedHeight;
+function incomingPagePlaceholder() {
+    return document.getElementById("incoming-page-placeholder")
 }
-CandidateElement.prototype = {
-    calculateRawScore: function calculateRawScore() {
-        var score = 0;
-        var textNodes = this.textNodes;
-        for (var i = 0; i < textNodes.length; i++)
-            score += this.rawScoreForTextNode(textNodes[i]);
-        return score;
-    },
-    calculateRegExBonus: function calculateRegExBonus() {
-        var regExBonusMultiplier = 1;
-        for (var currentElement = this.element; currentElement; currentElement = currentElement.parentElement) {
-            var currentElementId = currentElement.getAttribute("id");
-            if (currentElementId) {
-                if (ArticleRegEx.test(currentElementId))
-                    regExBonusMultiplier += ArticleMatchBonus;
-                if (CommentRegEx.test(currentElementId))
-                    regExBonusMultiplier -= CommentMatchPenalty;
-            }
-            var currentElementClassName = currentElement.className;
-            if (currentElementClassName && typeof currentElementClassName === "string") {
-                if (ArticleRegEx.test(currentElementClassName))
-                    regExBonusMultiplier += ArticleMatchBonus;
-                if (CommentRegEx.test(currentElementClassName))
-                    regExBonusMultiplier -= CommentMatchPenalty;
-            }
+function addIncomingPagePlaceholder(e) {
+    var t = document.createElement("div");
+    t.className = "page", t.id = "incoming-page-placeholder";
+    var n = document.createElement("div");
+    n.id = "incoming-page-corner";
+    var i = document.createElement("div");
+    i.id = "incoming-page-text", i.innerText = getLocalizedString(e ? "Loading Next Page\u2026" : "Connect to the Internet to view remaining pages."), n.appendChild(i), t.appendChild(n), document.getElementById("article").appendChild(t)
+}
+function removeIncomingPagePlaceholder() {
+    var e = incomingPagePlaceholder();
+    e.parentNode.removeChild(e)
+}
+function nextPageContainer() {
+    return document.getElementById("next-page-container")
+}
+function getLocalizedString(e) {
+    var t = "";
+    return t ? t : e
+}
+function nextPageLoadComplete() {
+    return null
+}
+function contentElementTouchingTopOfViewport() {
+    var e = articleTitleElement();
+    do {
+        var t = e.getBoundingClientRect();
+        if (t.top <= 0 && t.bottom >= 0)
+            return e
+            } while (e = nextReaderContentElement(e));
+    return null
+}
+var LoadNextPageDelay = 250,
+MaxNumberOfNextPagesToLoad = 80,
+ReaderOperationMode = {
+Normal: 0,
+OffscreenFetching: 1,
+ArchiveViewing: 2
+},
+DelayBeforeRestoringScrollPositionInMs = 1e3;
+String.prototype.format = function() {
+    for (var e = this.split("%@"), t = 0, n = arguments.length; n > t; ++t)
+        e.splice(2 * t + 1, 0, arguments[t].toString());
+    return e.join("")
+};
+var AnimationTerminationCondition = {
+Interrupted: 0,
+CompletedSuccessfully: 1
+};
+AppleAnimator = function(e, t, n) {
+    this.startTime = 0, this.duration = e, this.interval = t, this.animations = [], this.animationFinishedCallback = n, this.currentFrameRequestID = null, this._firstTime = !0;
+    var i = this;
+    this.animate = function() {
+        function e(e, t, n) {
+            return t > e ? t : e > n ? n : e
         }
-        return regExBonusMultiplier;
-    },
-    calculateLanguageScoreMultiplier: function calculateLanguageScoreMultiplier() {
-        if (this.languageScoreMultiplier != 0)
-            return;
-        if (this.textNodes && this.textNodes.length > 0) {
-            var numCharactersThatNeedMultiplier = 0;
-            var textString = this.textNodes[0].nodeValue.trim();
-            var length = Math.min(textString.length, 10);
-            for (var i = 0; i < length; i++) {
-                if (characterNeedsScoreMultiplier(textString[i]))
-                    numCharactersThatNeedMultiplier++;
-            }
-            if (numCharactersThatNeedMultiplier >= length / 2) {
-                this.languageScoreMultiplier = ScoreMultiplierForChineseJapaneseKorean;
+        var t,
+        n,
+        a,
+        o,
+        n = (new Date).getTime(),
+        r = i.duration;
+        t = e(n - i.startTime, 0, r), n = t / r, a = .5 - .5 * Math.cos(Math.PI * n), o = t >= r;
+        for (var s = i.animations, l = s.length, d = i._firstTime, c = 0; l > c; ++c)
+            s[c].doFrame(i, a, d, o, n);
+        return o ? void i.stop(AnimationTerminationCondition.CompletedSuccessfully) : (i._firstTime = !1, void (this.currentFrameRequestID = requestAnimationFrame(i.animate)))
+    }
+}, AppleAnimator.prototype = {
+start: function(e) {
+    var t = (new Date).getTime(),
+    n = this.interval;
+    this.startTime = t - n, e && (this.startTime += e), this.currentFrameRequestID = requestAnimationFrame(this.animate)
+},
+stop: function(e) {
+    this.animationFinishedCallback && this.animationFinishedCallback(e), this.currentFrameRequestID && cancelAnimationFrame(this.currentFrameRequestID)
+},
+addAnimation: function(e) {
+    this.animations[this.animations.length] = e
+}
+}, AppleAnimation = function(e, t, n) {
+    this.from = e, this.to = t, this.callback = n, this.now = e, this.ease = 0, this.progress = 0
+}, AppleAnimation.prototype = {
+doFrame: function(e, t, n, i, a) {
+    var o;
+    o = i ? this.to : this.from + (this.to - this.from) * t, this.now = o, this.ease = t, this.progress = a, this.callback(e, o, n, i)
+}
+};
+var scrollEventIsSmoothScroll = !1,
+smoothScrollingAnimator,
+smoothScrollingAnimation;
+window.addEventListener("scroll", articleScrolled, !1);
+const ContentAwareNavigationMarker = "reader-content-aware-navigation-marker",
+ContentAwareNavigationAnimationDuration = 200,
+ContentAwareNavigationElementOffset = 8,
+ContentAwareNavigationDirection = {
+Up: 0,
+Down: 1
+};
+ContentAwareScroller = function() {
+    this._numberOfContentAwareScrollAnimationsInProgress = 0
+}, ContentAwareScroller.prototype = {
+_contentElementAtTopOfViewport: function() {
+    var e = articleTitleElement();
+    do if (!(e.getBoundingClientRect().top < ContentAwareNavigationElementOffset))
+        return e;
+    while (e = nextReaderContentElement(e));
+    return null
+},
+_clearTargetOfContentAwareScrolling: function() {
+    var e = document.getElementById(ContentAwareNavigationMarker);
+    e && e.removeAttribute("id")
+},
+_contentAwareScrollFinished: function(e) {
+    e === AnimationTerminationCondition.CompletedSuccessfully && (--this._numberOfContentAwareScrollAnimationsInProgress, this._numberOfContentAwareScrollAnimationsInProgress || (smoothScrollingAnimator = null, smoothScrollingAnimation = null, this._clearTargetOfContentAwareScrolling()))
+},
+scroll: function(e) {
+    var t,
+    n,
+    i = document.getElementById(ContentAwareNavigationMarker),
+    a = i || this._contentElementAtTopOfViewport();
+    if (e === ContentAwareNavigationDirection.Down) {
+        var o = Math.abs(a.getBoundingClientRect().top - ContentAwareNavigationElementOffset) < 1;
+        t = i || o ? nextReaderContentElement(a) : a
+    } else if (e === ContentAwareNavigationDirection.Up)
+        if (a === articleTitleElement()) {
+            if (0 === document.body.scrollTop)
                 return;
-            }
-        }
-        this.languageScoreMultiplier = 1;
+            n = -1 * document.body.scrollTop
+        } else
+            t = previousReaderContentElement(a);
+    t && (n = t.getBoundingClientRect().top - ContentAwareNavigationElementOffset), ++this._numberOfContentAwareScrollAnimationsInProgress, smoothScroll(document.body, n, ContentAwareNavigationAnimationDuration, this._contentAwareScrollFinished.bind(this)), this._clearTargetOfContentAwareScrolling(), t && (t.id = ContentAwareNavigationMarker)
+}
+}, window.addEventListener("keydown", keyDown, !1);
+var didRestoreInitialScrollPosition = !1,
+initialScrollPosition;
+const DefaultFontSizes = [15, 16, 17, 18, 19, 20, 21, 23, 26, 28, 37, 46],
+DefaultLineHeights = ["25px", "26px", "27px", "28px", "29px", "30px", "31px", "33px", "37px", "39px", "51px", "62px"],
+FontSettings = {
+System: {
+fontSizes: DefaultFontSizes,
+lineHeights: ["25px", "26px", "27px", "29px", "30px", "31px", "32px", "33px", "38px", "39px", "51px", "62px"],
+cssClassName: "system"
+},
+Athelas: {
+fontSizes: DefaultFontSizes,
+lineHeights: DefaultLineHeights,
+cssClassName: "athelas"
+},
+Charter: {
+fontSizes: DefaultFontSizes,
+lineHeights: ["25px", "26px", "27px", "28px", "29px", "30px", "32px", "34px", "38px", "39px", "51px", "62px"],
+cssClassName: "charter"
+},
+Georgia: {
+fontSizes: DefaultFontSizes,
+lineHeights: ["25px", "26px", "27px", "28px", "29px", "30px", "32px", "34px", "38px", "41px", "51px", "62px"],
+cssClassName: "georgia"
+},
+    "Iowan Old Style": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: ["25px", "26px", "27px", "28px", "29px", "30px", "32px", "34px", "38px", "39px", "51px", "62px"],
+    cssClassName: "iowan"
     },
-    depth: function depth() {
-        if (!this.depthInDocument)
-            this.depthInDocument = elementDepth(this.element);
-        return this.depthInDocument;
+Palatino: {
+fontSizes: DefaultFontSizes,
+lineHeights: ["25px", "26px", "27px", "28px", "29px", "30px", "31px", "34px", "37px", "40px", "51px", "62px"],
+cssClassName: "palatino"
+},
+Seravek: {
+fontSizes: DefaultFontSizes,
+lineHeights: ["25px", "26px", "27px", "28px", "28px", "30px", "31px", "34px", "37px", "39px", "51px", "62px"],
+cssClassName: "seravek"
+},
+    "Times New Roman": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "times"
     },
-    finalScore: function finalScore() {
-        this.calculateLanguageScoreMultiplier();
-        return this.basicScore() * this.languageScoreMultiplier;
+    "Hiragino Sans W3": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "hiraginosans"
     },
-    basicScore: function basicScore() {
-        return this.rawScore * this.regExBonusMultiplier;
+    "Hiragino Kaku Gothic ProN": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "hiraginokaku"
     },
-    scoreDensity: function scoreDensity() {
-        var ignoredArea = 0;
-        var ignoredElement = this.element.querySelector(DensityExcludedElementSelector);
-        if (ignoredElement)
-            ignoredArea = ignoredElement.clientWidth * ignoredElement.clientHeight;
-        var articleArea = cachedElementBoundingRect(this.element).width * cachedElementBoundingRect(this.element).height;
-        var maximumImageArea = articleArea * MaximumContentImageAreaToArticleAreaRatio;
-        var imageMinimumWidth = cachedElementBoundingRect(this.element).width * MinimumContentImageWidthToArticleWidthRatio;
-        var imageElements = this.element.querySelectorAll("img");
-        var imageCount = imageElements.length;
-        for (var i = 0; i < imageCount; i++) {
-            var imageRect = cachedElementBoundingRect(imageElements[i]);
-            if (imageRect.width >= imageMinimumWidth && imageRect.height > MinimumContentImageHeight) {
-                var imageArea = imageRect.width * imageRect.height;
-                if (imageArea < maximumImageArea)
-                    ignoredArea += imageArea;
-            }
-        }
-        var score = this.basicScore();
-        var area = articleArea - ignoredArea;
-        var numberOfTextNodes = this.textNodes.length;
-        var numberOfCountedTextNodes = 0;
-        var sumOfFontSizes = 0;
-        for (var i = 0; i < numberOfTextNodes; i++) {
-            var parentNode = this.textNodes[i].parentNode;
-            console.assert(parentNode, "parentNode of this.textNodes[i] cannot be nil");
-            if (parentNode) {
-                sumOfFontSizes += fontSizeFromComputedStyle(getComputedStyle(parentNode));
-                numberOfCountedTextNodes++;
-            }
-        }
-        var averageFontSize = BaseFontSize;
-        if (numberOfCountedTextNodes)
-            averageFontSize = sumOfFontSizes /= numberOfCountedTextNodes;
-        this.calculateLanguageScoreMultiplier();
-        return (score / area * 1000) * (averageFontSize / BaseFontSize) * this.languageScoreMultiplier;
+    "Hiragino Mincho ProN": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "hiraginomincho"
     },
-    usableTextNodesInElement: function usableTextNodesInElement(element) {
-        var textNodes = [];
-        if (!element)
-            return textNodes;
-        const tagNamesToIgnore = {
-            "A": 1,
-            "DD": 1,
-            "DT": 1,
-            "NOSCRIPT": 1,
-            "OL": 1,
-            "OPTION": 1,
-            "PRE": 1,
-            "SCRIPT": 1,
-            "STYLE": 1,
-            "TD": 1,
-            "UL": 1
-        };
-        var xPathQuery = "text()|*/text()|*/a/text()|*/li/text()|*/span/text()|*/em/text()|*/i/text()|*/strong/text()|*/b/text()|*/font/text()|blockquote/*/text()|div[count(./p)=count(./*)]/p/text()";
-        var xPathResults = this.contentDocument.evaluate(xPathQuery, element, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-        for (var i = 0; i < xPathResults.snapshotLength; i++) {
-            var textNode = xPathResults.snapshotItem(i);
-            if (tagNamesToIgnore[textNode.parentNode.tagName])
-                continue;
-            if (isNodeWhitespace(textNode))
-                continue;
-            textNodes.push(textNode);
-        }
-        return textNodes;
+    "Hiragino Maru Gothic ProN": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "hiraginomaru"
     },
-    addTextNodesFromCandidateElement: function addTextNodesFromCandidateElement(otherCandidateElement) {
-        for (var j = 0; j < this.textNodes.length; j++)
-            this.textNodes[j].alreadyCounted = true;
-        var otherCandidateElementTextNodes = otherCandidateElement.textNodes;
-        for (var j = 0; j < otherCandidateElementTextNodes.length; j++) {
-            if (!otherCandidateElementTextNodes[j].alreadyCounted)
-                this.textNodes.push(otherCandidateElementTextNodes[j]);
-        }
-        for (var j = 0; j < this.textNodes.length; j++)
-            this.textNodes[j].alreadyCounted = null;
-        this.rawScore = this.calculateRawScore();
+    "PingFang SC": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "pingfangsc"
     },
-    rawScoreForTextNode: function rawScoreForTextNode(textNode) {
-        const TextNodeMinimumLength = 20;
-        const TextNodeLengthPower = 1.25;
-        if (!textNode)
-            return 0;
-        var length = textNode.length;
-        if (length < TextNodeMinimumLength)
-            return 0;
-        var ancestor = textNode.parentNode;
-        if (!isElementVisible(ancestor))
-            return 0;
-        var multiplier = 1;
-        while (ancestor && ancestor != this.element) {
-            multiplier -= 0.1;
-            ancestor = ancestor.parentNode;
-        }
-        return Math.pow(length * multiplier, TextNodeLengthPower);
+    "Heiti SC": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "heitisc"
     },
-    shouldDisqualifyDueToScoreDensity: function shouldDisqualifyDueToScoreDensity() {
-        if (this.scoreDensity() < ArticleMinimumScoreDensity)
-            return true;
-        return false;
+    "Songti SC": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "songtisc"
     },
-    shouldDisqualifyDueToHorizontalRuleDensity: function shouldDisqualifyDueToHorizontalRuleDensity() {
-        var horizontalRules = this.element.querySelectorAll("hr");
-        var numberOfHRs = horizontalRules.length;
-        var numberOfHRsToCount = 0;
-        var elementRect = cachedElementBoundingRect(this.element);
-        var minimumWidthToCount = elementRect.width * 0.70;
-        for (var i = 0; i < numberOfHRs; i++) {
-            if (horizontalRules[i].clientWidth > minimumWidthToCount)
-                numberOfHRsToCount++;
-        }
-        if (numberOfHRsToCount) {
-            var averageDistanceBetweenHRs = elementRect.height / numberOfHRsToCount;
-            if (averageDistanceBetweenHRs < MinimumAverageDistanceBetweenHRElements)
-                return true;
-        }
-        return false;
+    "Kaiti SC": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "kaitisc"
     },
-    shouldDisqualifyDueToHeaderDensity: function shouldDisqualifyDueToHeaderDensity() {
-        var headerLinksXPathQuery = "(h1|h2|h3|h4|h5|h6|*/h1|*/h2|*/h3|*/h4|*/h5|*/h6)[a]";
-        var headerLinkResults = this.contentDocument.evaluate(headerLinksXPathQuery, this.element, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-        if (headerLinkResults.snapshotLength > 2) {
-            var numberOfHeadersToCount = 0;
-            var elementRect = cachedElementBoundingRect(this.element);
-            var topBottomIgnoreDistance = elementRect.height * PortionOfCandidateHeightToIgnoreForHeaderCheck;
-            for (var i = 0; i < headerLinkResults.snapshotLength; i++) {
-                var header = headerLinkResults.snapshotItem(i);
-                var headerRect = cachedElementBoundingRect(header);
-                if (headerRect.top - elementRect.top > topBottomIgnoreDistance && elementRect.bottom - headerRect.bottom > topBottomIgnoreDistance)
-                    numberOfHeadersToCount++;
-            }
-            var averageDistanceBetweenHeaders = elementRect.height / numberOfHeadersToCount;
-            if (averageDistanceBetweenHeaders < MinimumAverageDistanceBetweenHeaderElements)
-                return true;
-        }
-        return false;
+    "Yuanti SC": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "yuantisc"
     },
-    shouldDisqualifyDueToSimilarElements: function shouldDisqualifyDueToSimilarElements(candidateElements) {
-        var baseElement = this.element;
-        var candidateClass = baseElement.getAttribute("class");
-        if (!candidateClass) {
-            baseElement = baseElement.parentElement;
-            if (baseElement) {
-                candidateClass = baseElement.getAttribute("class");
-                if (!candidateClass) {
-                    baseElement = baseElement.parentElement;
-                    if (baseElement)
-                        candidateClass = baseElement.getAttribute("class");
-                }
-            }
-        }
-        if (candidateClass) {
-            if (candidateElements === undefined)
-                candidateElements = [];
-            for (var i = 0; i < candidateElements.length; i++)
-                candidateElements[i].element.candidateElement = candidateElements[i];
-            var elementsOfSameClass;
-            try {
-                var classNames = candidateClass.split(" ");
-                var classQuery = "";
-                for (var j = 0; j < classNames.length; j++) {
-                    if (classNames[j].length)
-                        classQuery += "." + classNames[j];
-                }
-                elementsOfSameClass = this.contentDocument.querySelectorAll(classQuery);
-            } catch (exception) {
-                elementsOfSameClass = [];
-            }
-            var skippedPossiblePrependCandidate = false;
-            var baseElementDepth = elementDepth(baseElement);
-            for (var i = 0; i < elementsOfSameClass.length; i++) {
-                var element = elementsOfSameClass[i];
-                if (element == baseElement)
-                    continue;
-                if (element.parentElement == baseElement || baseElement.parentElement == element)
-                    continue;
-                if (!isElementVisible(element))
-                    continue;
-                var candidate = element.candidateElement;
-                if (!candidate) {
-                    candidate = CandidateElement.candidateIfElementIsViable(element, this.contentDocument, true);
-                    if (!candidate)
-                        continue;
-                }
-                if (candidate.basicScore() * ReaderMinimumAdvantage > this.basicScore()) {
-                    if (!skippedPossiblePrependCandidate && cachedElementBoundingRect(element).bottom < cachedElementBoundingRect(this.element).top) {
-                        skippedPossiblePrependCandidate = true;
-                        continue;
-                    }
-                    if (element.previousElementSibling != null && baseElement.previousElementSibling != null && element.previousElementSibling.className == baseElement.previousElementSibling.className)
-                        return true;
-                    if (element.nextElementSibling != null && baseElement.nextElementSibling != null && element.nextElementSibling.className == baseElement.nextElementSibling.className)
-                        return true;
-                    if (elementDepth(element) == baseElementDepth) {
-                        while (element.parentElement != null && baseElement.parentElement != null) {
-                            if (element.parentElement == baseElement.parentElement)
-                                break;
-                            element = element.parentElement;
-                            baseElement = baseElement.parentElement;
-                        }
-                    }
-                    while (baseElement.childElementCount <= 1) {
-                        if (!baseElement.childElementCount || !element.childElementCount)
-                            return false;
-                        if (element.childElementCount > 1)
-                            return false;
-                        if (baseElement.firstElementChild.tagName !== element.firstElementChild.tagName)
-                            return false;
-                        baseElement = baseElement.firstElementChild;
-                        element = element.firstElementChild;
-                    }
-                    if (element.childElementCount <= 1)
-                        return false;
-                    var elementHeader = element.firstElementChild;
-                    var elementFooter = element.lastElementChild;
-                    var baseElementHeader = baseElement.firstElementChild;
-                    var baseElementFooter = baseElement.lastElementChild;
-                    if (elementHeader.tagName !== baseElementHeader.tagName)
-                        return false;
-                    if (elementFooter.tagName !== baseElementFooter.tagName)
-                        return false;
-                    var headerClass = elementHeader.className;
-                    var footerClass = elementFooter.className;
-                    var baseHeaderClass = baseElementHeader.className;
-                    var baseFooterClass = elementFooter.className;
-                    var acceptableNumberOfElementsWithClassName = (baseFooterClass == baseHeaderClass) ? 2 : 1;
-                    if (headerClass.length || baseHeaderClass.length) {
-                        if (!headerClass.length || !baseHeaderClass.length)
-                            return false;
-                        if (headerClass == baseHeaderClass) {
-                            if (baseElement.querySelectorAll("." + baseHeaderClass.replace(/\s+/, ".")).length <= acceptableNumberOfElementsWithClassName)
-                                return true;
-                        }
-                    }
-                    if (footerClass.length || baseFooterClass.length) {
-                        if (!footerClass.length || !baseFooterClass.length)
-                            return false;
-                        if (footerClass == baseFooterClass && baseElement.querySelectorAll("." + baseFooterClass.replace(/\s+/, ".")).length <= acceptableNumberOfElementsWithClassName)
-                            return true;
-                    }
-                    var baseHeaderHeight = baseElementHeader.clientHeight;
-                    var baseFooterHeight = baseElementFooter.clientHeight;
-                    if (!baseHeaderHeight || !elementHeader.clientHeight)
-                        return false;
-                    if (!baseFooterHeight || !elementFooter.clientHeight)
-                        return false;
-                    if (baseHeaderHeight == elementHeader.clientHeight || baseFooterHeight == elementFooter.clientHeight)
-                        return true;
-                    return false;
-                }
-            }
-            for (var i = 0; i < candidateElements.length; i++)
-                candidateElements[i].element.candidateElement = null;
-        }
-        return false;
+    "PingFang TC": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "pingfangtc"
+    },
+    "Heiti TC": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "heititc"
+    },
+    "Songti TC": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "songtitc"
+    },
+    "Kaiti TC": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "kaititc"
+    },
+    "Yuanti TC": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "yuantitc"
+    },
+    "Apple SD Gothic Neo": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "applesdgothicneo"
+    },
+NanumMyeongjo: {
+fontSizes: DefaultFontSizes,
+lineHeights: DefaultLineHeights,
+cssClassName: "nanummyeongjo"
+},
+    "Khmer Sangam MN": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "khmersangammn"
+    },
+    "Lao Sangam MN": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "laosangam"
+    },
+Thonburi: {
+fontSizes: DefaultFontSizes,
+lineHeights: DefaultLineHeights,
+cssClassName: "thonburi"
+},
+Damascus: {
+fontSizes: DefaultFontSizes,
+lineHeights: DefaultLineHeights,
+cssClassName: "damascus"
+},
+Kefa: {
+fontSizes: DefaultFontSizes,
+lineHeights: DefaultLineHeights,
+cssClassName: "kefa"
+},
+    "Arial Hebrew": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "arialhebrew"
+    },
+Mshtakan: {
+fontSizes: DefaultFontSizes,
+lineHeights: DefaultLineHeights,
+cssClassName: "mshtakan"
+},
+    "Plantagenet Cherokee": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "plantagenetcherokee"
+    },
+    "Euphemia UCAS": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "euphemiaucas"
+    },
+    "Kohinoor Bangla": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "kohinoorbangla"
+    },
+    "Bangla Sangam MN": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "banglasangammn"
+    },
+    "Gujarati Sangam MN": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "gujarati"
+    },
+    "Gurmukhi MN": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "gurmukhi"
+    },
+    "Kohinoor Devanagari": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "kohinoordevanagari"
+    },
+    "ITF Devanagari": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "itfdevanagari"
+    },
+    "Kannada Sangam MN": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "kannada"
+    },
+    "Malayalam Sangam MN": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "malayalam"
+    },
+    "Oriya Sangam MN": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "oriya"
+    },
+    "Sinhala Sangam MN": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "sinhala"
+    },
+InaiMathi: {
+fontSizes: DefaultFontSizes,
+lineHeights: DefaultLineHeights,
+cssClassName: "inaimathi"
+},
+    "Tamil Sangam MN": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "tamil"
+    },
+    "Kohinoor Telugu": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "Kohinoor Telugu"
+    },
+    "Telugu Sangam MN": {
+    fontSizes: DefaultFontSizes,
+    lineHeights: DefaultLineHeights,
+    cssClassName: "telugu"
     }
+},
+ThemeSettings = {
+White: {
+cssClassName: "white"
+},
+Gray: {
+cssClassName: "gray"
+},
+Sepia: {
+cssClassName: "sepia"
+},
+Night: {
+cssClassName: "night"
 }
-String.prototype.lastInteger = function lastInteger() {
-    const DecimalRunsRegEx = /[0-9]+/g;
-    var decimalRuns = this.match(DecimalRunsRegEx);
-    if (decimalRuns)
-        return parseInt(decimalRuns[decimalRuns.length - 1]);
-    return NaN;
-}
-String.prototype.trim = function trim() {
-    return this.replace(/^\s+/, '').replace(/\s+$/, '');
-}
-String.prototype.escapeCharacters = function (chars) {
-    var foundChar = false;
-    for (var i = 0; i < chars.length; ++i) {
-        if (this.indexOf(chars.charAt(i)) !== -1) {
-            foundChar = true;
-            break;
+},
+ConfigurationVersion = 4,
+ShouldSaveConfiguration = {
+No: !1,
+Yes: !0
+},
+ShouldRestoreReadingPosition = {
+No: !1,
+Yes: !0
+},
+MinTextZoomIndex = 0,
+MaxTextZoomIndex = 11,
+MaximumWidthOfImageExtendingBeyondTextContainer = 1050,
+ReaderConfigurationJavaScriptEnabledKey = "javaScriptEnabled";
+ReaderAppearanceController = function() {
+    this._defaultTextSizeIndexProducer = function() {
+        return 3
+    }, this._readerSizeClassProducer = function() {
+        return "all"
+    }, this._shouldUsePaperAppearance = function() {
+        return this.articleWidth() + 140 < this.documentElementWidth()
+    }, this._canLayOutContentBeyondMainTextColumn = !0, this._defaultFontFamilyName = "System", this._defaultThemeName = "White", this.configuration = {}, this._textSizeIndex = null, this._fontFamilyName = this._defaultFontFamilyName, this._themeName = this._defaultThemeName
+}, ReaderAppearanceController.prototype = {
+initialize: function() {
+    this.applyConfiguration(), /Macintosh/g.test(navigator.userAgent) ? document.body.classList.add("mac") : document.body.classList.add("ios")
+},
+applyConfiguration: function(e) {
+    var t = this._validConfigurationAndValidityFromUntrustedConfiguration(e),
+    n = t[0],
+    i = t[1],
+    a = n.fontSizeIndexForSizeClass[this._readerSizeClassProducer()];
+    textSizeIndexIsValid(a) ? this.setCurrentTextSizeIndex(a, ShouldSaveConfiguration.No) : (this.setCurrentTextSizeIndex(this._defaultTextSizeIndexProducer(), ShouldSaveConfiguration.No), i = !1);
+    var o = this._locale(),
+    r = n.fontFamilyNameForLanguageTag[o];
+    r && FontSettings[r] || (r = this._defaultFontFamilyNameForLanguage(o), i = !1), this.setFontFamily(r, ShouldSaveConfiguration.No), this.setTheme(n.themeName, ShouldSaveConfiguration.No), this.configuration = n, i || this._updateSavedConfiguration()
+},
+_validConfigurationAndValidityFromUntrustedConfiguration: function(e) {
+    var t = {
+    fontSizeIndexForSizeClass: {},
+    fontFamilyNameForLanguageTag: {},
+    themeName: null
+    },
+    n = !0;
+    e || (e = {}, n = !1);
+    var i = (e || {}).version;
+    (!i || "number" != typeof i || ConfigurationVersion > i) && (e = {}, n = !1);
+    var a = (e || {}).fontSizeIndexForSizeClass;
+    if (a && "object" == typeof a)
+        for (var o in a) {
+            var r = a[o];
+            textSizeIndexIsValid(r) ? t.fontSizeIndexForSizeClass[o] = r : n = !1
+        }
+    else
+        n = !1;
+    var s = e.fontFamilyNameForLanguageTag;
+    s && "object" == typeof s ? t.fontFamilyNameForLanguageTag = s : (t.fontFamilyNameForLanguageTag = {}, n = !1);
+    var l = e.themeName;
+    return l && "string" == typeof l && ThemeSettings[l] ? t.themeName = l : (t.themeName = this._defaultThemeName, n = !1), [t, n]
+},
+_updateSavedConfiguration: function() {
+    this.configuration.fontSizeIndexForSizeClass[this._readerSizeClassProducer()] = this._textSizeIndex, this.configuration.fontFamilyNameForLanguageTag[this._locale()] = this._fontFamilyName, this.configuration.themeName = this._themeName;
+    var e = this.configuration;
+    e.version = ConfigurationVersion
+},
+applyAppropriateFontSize: function() {
+    var e = this.configuration.fontSizeIndexForSizeClass[this._readerSizeClassProducer()];
+    e && this.setCurrentTextSizeIndex(e, ShouldSaveConfiguration.No)
+},
+makeTextLarger: function() {
+    this._textSizeIndex < this._currentFontSettings().fontSizes.length - 1 && this.setCurrentTextSizeIndex(this._textSizeIndex + 1, ShouldSaveConfiguration.Yes)
+},
+makeTextSmaller: function() {
+    this._textSizeIndex > 0 && this.setCurrentTextSizeIndex(this._textSizeIndex - 1, ShouldSaveConfiguration.Yes)
+},
+articleWidth: function() {
+    return document.getElementById("article").getBoundingClientRect().width
+},
+_textColumnWidthInPoints: function() {
+    return parseFloat(getComputedStyle(document.querySelector("#article .page")).width)
+},
+documentElementWidth: function() {
+    return document.documentElement.clientWidth
+},
+setCurrentTextSizeIndex: function(e, t) {
+    e !== this._textSizeIndex && (this._textSizeIndex = e, this._rebuildDynamicStyleSheet(), this.layOutContent(), t === ShouldSaveConfiguration.Yes && this._updateSavedConfiguration())
+},
+currentFontCSSClassName: function() {
+    return this._currentFontSettings().cssClassName
+},
+_currentFontSettings: function() {
+    return FontSettings[this._fontFamilyName]
+},
+setFontFamily: function(e, t) {
+    var n = document.body,
+    i = FontSettings[e];
+    n.classList.contains(i.cssClassName) || (this._fontFamilyName && n.classList.remove(FontSettings[this._fontFamilyName].cssClassName), n.classList.add(i.cssClassName), this._fontFamilyName = e, this.layOutContent(), t === ShouldSaveConfiguration.Yes && this._updateSavedConfiguration())
+},
+_theme: function() {
+    return ThemeSettings[this._themeName]
+},
+setTheme: function(e, t) {
+    var n = document.body,
+    i = ThemeSettings[e];
+    n.classList.contains(i.cssClassName) || (this._theme() && n.classList.remove(this._theme().cssClassName), n.classList.add(i.cssClassName), this._themeName = e, t === ShouldSaveConfiguration.Yes && this._updateSavedConfiguration())
+},
+usesPaperAppearance: function() {
+    return document.documentElement.classList.contains("paper")
+},
+layOutContent: function(e) {
+    void 0 === e && (e = ShouldRestoreReadingPosition.Yes), this._shouldUsePaperAppearance() ? document.documentElement.classList.add("paper") : document.documentElement.classList.remove("paper"), makeWideElementsScrollable(), this._canLayOutContentBeyondMainTextColumn && (this._layOutImagesBeyondTextColumn(), this._layOutElementsContainingTextBeyondTextColumn(), this._layOutVideos()), e === ShouldRestoreReadingPosition.Yes && ReadingPositionStabilizerJS.restorePosition()
+},
+_layOutImagesBeyondTextColumn: function() {
+    for (var e = this.canLayOutContentMaintainingAspectRatioBeyondTextColumn(), t = article.querySelectorAll("img"), n = t.length, i = 0; n > i; ++i)
+        this.setImageShouldLayOutBeyondTextColumnIfAppropriate(t[i], e)
+        },
+_layOutElementsContainingTextBeyondTextColumn: function() {
+    const e = {
+    PRE: !0,
+    TABLE: !1
+    },
+    t = 22;
+    for (var n = document.querySelectorAll(".scrollable pre, .scrollable table"), i = n.length, a = 0; i > a; ++a) {
+        for (var o = n[a], r = o.parentElement, s = r; s; s = s.parentElement)
+            "BLOCKQUOTE" === s.tagName && s.classList.add("simple");
+        stopExtendingElementBeyondTextColumn(r);
+        var l = o.scrollWidth,
+        d = this._textColumnWidthInPoints();
+        if (!(d >= l)) {
+            var c = getComputedStyle(document.querySelector(".page")),
+            u = 0;
+            if (e[o.tagName]) {
+                var m = parseFloat(c["-webkit-padding-start"]) + parseFloat(c["-webkit-margin-start"]);
+                u = Math.min(m, t)
+            }
+            var g = Math.min(l, this._widthAvailableForLayout() - 2 * u);
+            extendElementBeyondTextColumn(r, g, d)
         }
     }
-    if (!foundChar)
-        return this;
-    var result = "";
-    for (var i = 0; i < this.length; ++i) {
-        if (chars.indexOf(this.charAt(i)) !== -1)
-            result += "\\";
-        result += this.charAt(i);
+},
+_layOutVideos: function() {
+    function e(e) {
+        return e.src && /^(.+\.)?youtube\.com\.?$/.test(anchorForURL(e.src).hostname)
     }
-    return result;
+    const t = 16 / 9;
+    for (var n = article.querySelectorAll("iframe"), i = n.length, a = 0; i > a; ++a) {
+        var o = n[a];
+        e(o) && (o.style.width = "100%", o.style.height = this._textColumnWidthInPoints() / t + "px")
+    }
+},
+canLayOutContentMaintainingAspectRatioBeyondTextColumn: function() {
+    const e = 700;
+    if (window.innerHeight >= e)
+        return !0;
+    const t = 1.25;
+    return window.innerWidth / window.innerHeight <= t
+},
+setImageShouldLayOutBeyondTextColumnIfAppropriate: function(e, t) {
+    if (t && !e.closest("blockquote, table, .float")) {
+        var n,
+        i = this._textColumnWidthInPoints(),
+        a = parseFloat(e.getAttribute("width"));
+        n = isNaN(a) ? e.naturalWidth : a;
+        var o = Math.min(n, Math.min(MaximumWidthOfImageExtendingBeyondTextContainer, this._widthAvailableForLayout()));
+        if (o > i)
+            return void extendElementBeyondTextColumn(e, o, i)
+            }
+    stopExtendingElementBeyondTextColumn(e)
+},
+_widthAvailableForLayout: function() {
+    return this.usesPaperAppearance() ? this.articleWidth() : this.documentElementWidth()
+},
+_rebuildDynamicStyleSheet: function() {
+    for (var e = document.getElementById("dynamic-article-content").sheet; e.cssRules.length;)
+        e.removeRule(0);
+    var t = this._currentFontSettings().fontSizes[this._textSizeIndex] + "px",
+    n = this._currentFontSettings().lineHeights[this._textSizeIndex];
+    e.insertRule("#article { font-size: " + t + "; line-height: " + n + "; }")
+},
+_locale: function() {
+    var e = document.getElementById("article").style.webkitLocale;
+    return e && e.length ? e : ""
+},
+_defaultFontFamilyNameForLanguage: function(e) {
+    const t = {
+    am: "Kefa",
+    ar: "Damascus",
+    hy: "Mshtakan",
+    bn: "Kohinoor Bangla",
+    chr: "Plantagenet Cherokee",
+    gu: "Gujarati Sangam MN",
+        "pa-Guru": "Gurmukhi MN",
+    he: "Arial Hebrew",
+    hi: "Kohinoor Devanagari",
+    ja: "Hiragino Mincho ProN",
+    kn: "Kannada Sangam MN",
+    km: "Khmer Sangam MN",
+    ko: "Apple SD Gothic Neo",
+    lo: "Lao Sangam MN",
+    ml: "Malayalam Sangam MN",
+    or: "Oriya Sangam MN",
+    si: "Sinhala Sangam MN",
+    ta: "InaiMathi",
+    te: "Kohinoor Telugu",
+    th: "Thonburi",
+        "zh-Hans": "PingFang SC",
+        "zh-Hant": "PingFang TC",
+        "iu-Cans": "Euphemia UCAS"
+    };
+    var n = t[e];
+    return n ? n : this._defaultFontFamilyName
 }
-String.prototype.escapeForRegExp = function () {
-    return this.escapeCharacters("^[]{}()\\.$*+?|");
-}
-ReaderArticleFinder = function (contentDocument) {
-    this.contentDocument = contentDocument;
-    this.didSearchForArticleNode = false;
-    this.article = null;
-    this.didSearchForExtraArticleNode = false;
-    this.extraArticle = null;
-    this.leadingImage = null;
-    this._cachedScrollY = 0;
-    this._cachedScrollX = 0;
-    this._elementsWithCachedBoundingRects = [];
-    this._cachedContentTextStyle = null;
-    this.pageNumber = 1;
-    this.prefixWithDateForNextPageURL = null;
-}
-ReaderArticleFinder.prototype = {
-    isReaderModeAvailable: function isReaderModeAvailable() {
-        this.cacheWindowScrollPosition();
-        var article = this.articleNode();
-        return article != null;
-    },
-    prepareToTransitionToReader: function prepareToTransitionToReader() {
-        clearCachedElementBoundingRects();
-        this.cacheWindowScrollPosition();
-        this.adoptableArticle(true);
-        this.nextPageURL();
-        this.articleIsLTR();
-    },
-    nextPageURL: function nextPageURL() {
-        if (this._nextPageURL === undefined) {
-            var nextPageURLString = this.nextPageURLString();
-            if (nextPageURLString) {
-                nextPageURLString = ReaderArticleFinderJSController.substituteURLForNextPageURL(nextPageURLString);
-            }
-            this._nextPageURL = nextPageURLString;
-        }
-        return this._nextPageURL;
-    },
-    classNameIsSignificantInRouteComputation: function classNameIsSignificantInRouteComputation(className) {
-        if (!className)
-            return false;
-        return !(className.toLowerCase() in StylisticClassNames);
-    },
-    shouldIgnoreInRouteComputation: function shouldIgnoreInRouteComputation(element) {
-        if (element.tagName === "SCRIPT" || element.tagName === "LINK" || element.tagName === "STYLE")
-            return true;
-        if (element.tagName !== "TR")
-            return false;
-        if (element.offsetHeight)
-            return false;
-        return true;
-    },
-    routeToArticleNode: function routeToArticleNode() {
-        var hint = [];
-        var currentElement = this.articleNode();
-        while (currentElement) {
-            var step = {};
-            step.tagName = currentElement.tagName;
-            if (currentElement.id)
-                step.id = currentElement.id;
-            if (this.classNameIsSignificantInRouteComputation(currentElement.className))
-                step.className = currentElement.className;
-            step.index = 1;
-            for (var sibling = currentElement.previousElementSibling; sibling; sibling = sibling.previousElementSibling) {
-                if (!this.shouldIgnoreInRouteComputation(sibling))
-                    step.index++;
-            }
-            hint.unshift(step);
-            currentElement = currentElement.parentElement;
-        }
-        return hint;
-    },
-    articleNode: function articleNode(forceFindingArticle) {
-        if (!this.didSearchForArticleNode || forceFindingArticle) {
-            this.article = this.findArticle(forceFindingArticle);
-            this.didSearchForArticleNode = true;
-            if (this.article)
-                this.articleIsLTR();
-        }
-        return this.article ? this.article.element : null;
-    },
-    extraArticleNode: function extraArticleNode() {
-        if (!this.didSearchForArticleNode)
-            this.articleNode();
-        if (!this.didSearchForExtraArticleNode) {
-            this.extraArticle = this.findExtraArticle();
-            this.didSearchForExtraArticleNode = true;
-        }
-        return this.extraArticle ? this.extraArticle.element : null;
-    },
-    cacheWindowScrollPosition: function cacheWindowScrollPosition() {
-        this._cachedScrollY = window.scrollY;
-        this._cachedScrollX = window.scrollX;
-    },
-    contentTextStyle: function contentTextStyle() {
-        if (this._cachedContentTextStyle)
-            return this._cachedContentTextStyle;
-        this._cachedContentTextStyle = contentTextStyleForNode(this.contentDocument, this.articleNode(), false);
-        if (!this._cachedContentTextStyle)
-            this._cachedContentTextStyle = getComputedStyle(this.articleNode());
-        return this._cachedContentTextStyle;
-    },
-    commaCountIsLessThan: function commaCountIsLessThan(node, limit) {
-        var count = 0;
-        var textContent = node.textContent;
-        var i = -1;
-        while (count < limit && (i = textContent.indexOf(',', i + 1)) >= 0)
-            count++;
-        return count < limit;
-    },
-    calculateLinkDensity: function calculateLinkDensity(element) {
-        var textLength = removeWhitespace(element.textContent).length;
-        if (!textLength)
-            return 0;
-        var links = element.querySelectorAll("a");
-        var linkCharacterCount = 0;
-        for (var i = 0; i < links.length; i++)
-            linkCharacterCount += removeWhitespace(links[i].textContent).length;
-        return linkCharacterCount / textLength;
-    },
-    shouldPruneElement: function shouldPruneElement(element, originalElement) {
-        const MaxInputToParagraphRatio = 0.33;
-        const MaxPositiveWeightLinkDensity = 0.5;
-        const MaxStandardLinkDensity = 0.2;
-        const MinimumTextLength = 25;
-        const MinimumAverageImageArea = 200 * 200;
-        if (!element.parentElement)
-            return false;
-        if (element.tagName !== "OBJECT" && element.tagName !== "EMBED" && element.tagName !== "CANVAS") {
-            var hasElementOrTextNodeChild = false;
-            for (var i = 0; i < element.childNodes.length; i++) {
-                var node = element.childNodes[i];
-                var nodeType = node.nodeType;
-                if (nodeType === Node.ELEMENT_NODE || (nodeType === Node.TEXT_NODE && !isNodeWhitespace(node))) {
-                    hasElementOrTextNodeChild = true;
-                    break;
-                }
-            }
-            if (!hasElementOrTextNodeChild)
-                return true;
-        }
-        if (element.tagName === "CANVAS")
-            return element.parentNode.tagName === "CUFON";
-        var classIdWeight = 0;
-        if (originalElement) {
-            if (PositiveRegEx.test(originalElement.className))
-                classIdWeight++;
-            if (PositiveRegEx.test(originalElement.id))
-                classIdWeight++;
-            if (NegativeRegEx.test(originalElement.className))
-                classIdWeight--;
-            if (NegativeRegEx.test(originalElement.id))
-                classIdWeight--;
-        }
-        if (classIdWeight < 0)
-            return true;
-        if (element.tagName === "UL") {
-            if (originalElement.querySelector("iframe") && originalElement.querySelector("script"))
-                return true;
-            return false;
-        }
-        if (element.tagName === "OBJECT") {
-            const PlugInsToKeepRegEx = /youtube|vimeo|dailymotion/;
-            var embedElement = element.querySelector("embed[src]");
-            if (embedElement && PlugInsToKeepRegEx.test(embedElement.src))
-                return false;
-            var dataAttribute = element.getAttribute("data");
-            if (dataAttribute && PlugInsToKeepRegEx.test(dataAttribute))
-                return false;
-            return true;
-        }
-        if (element.childElementCount === 1) {
-            var childElement = element.firstElementChild;
-            if (childElement.tagName === "A")
-                return false;
-            if (childElement.tagName === "SPAN" && childElement.className === "converted-anchor" && elementHasAncestorWithTagName(childElement, "TABLE"))
-                return false;
-        }
-        var imageElements = element.querySelectorAll("img");
-        var imageElementCount = imageElements.length;
-        if (imageElementCount) {
-            var averageImageArea = 0;
-            for (var i = 0; i < imageElementCount; i++) {
-                var originalImage = imageElements[i].originalElement;
-                if (!isElementVisible(originalImage))
-                    continue;
-                var originalRect = cachedElementBoundingRect(originalImage);
-                averageImageArea += (originalRect.width / imageElementCount) * (originalRect.height / imageElementCount);
-            }
-            if (averageImageArea > MinimumAverageImageArea)
-                return false;
-        }
-        if (!this.commaCountIsLessThan(element, 10))
-            return false;
-        var p = element.querySelectorAll("p").length;
-        var br = element.querySelectorAll("br").length;
-        var numParagraphs = p + Math.floor(br / 2);
-        if (imageElementCount > numParagraphs)
-            return true;
-        if (element.querySelectorAll("li").length > numParagraphs)
-            return true;
-        if (element.querySelectorAll("input").length / numParagraphs > MaxInputToParagraphRatio)
-            return true;
-        if (element.textContent.length < MinimumTextLength && (imageElementCount != 1))
-            return true;
-        if (element.querySelector("embed"))
-            return true;
-        var linkDensity = this.calculateLinkDensity(element);
-        if (classIdWeight >= 1 && linkDensity > MaxPositiveWeightLinkDensity)
-            return true;
-        if (classIdWeight < 1 && linkDensity > MaxStandardLinkDensity)
-            return true;
-        if (element.tagName === "TABLE") {
-            var textLength = removeWhitespace(element.innerText).length;
-            var originalTextLength = removeWhitespace(originalElement.innerText).length;
-            if (textLength <= (originalTextLength * 0.5))
-                return true;
-        }
-        return false;
-    },
-    wordCountIsLessThan: function wordCountIsLessThan(node, limit) {
-        var count = 0;
-        var textContent = node.textContent;
-        var i = -1;
-        while ((i = textContent.indexOf(' ', i + 1)) >= 0 && count < limit)
-            count++;
-        return count < limit;
-    },
-    leadingImageIsAppropriateWidth: function leadingImageIsAppropriateWidth(image) {
-        if (!this.article || !image)
-            return false;
-        return image.getBoundingClientRect().width >= this.article.element.getBoundingClientRect().width;
-    },
-    newDivFromNode: function newDivFromNode(node) {
-        var div = this.contentDocument.createElement("div");
-        if (node)
-            div.innerHTML = node.innerHTML;
-        return div;
-    },
-    adoptableLeadingImage: function adoptableLeadingImage() {
-        const LeadingImageMaximumContainerChildren = 5;
-        const LeadingImageMinimumAbsoluteWidth = 600;
-        const LeadingImageCreditRegex = /credit/;
-        const LeadingImageCaptionRegex = /caption/;
-        const LeadingImageAttributeToKeepRegex = /src|alt/;
-        if (!this.article || !this.leadingImage || !this.leadingImageIsAppropriateWidth(this.leadingImage))
-            return null;
-        var leadingImageContainer = this.leadingImage.parentNode;
-        var originalCredit = null;
-        var originalCaption = null;
-        var numChildren = leadingImageContainer.children.length;
-        if (leadingImageContainer.tagName === "DIV" && numChildren > 1 && numChildren < LeadingImageMaximumContainerChildren) {
-            var texts = leadingImageContainer.cloneNode(true).querySelectorAll("p, div");
-            for (var i = 0, length = texts.length; i < length; i++) {
-                var text = texts[i];
-                if (LeadingImageCreditRegex.test(text.className))
-                    originalCredit = text.cloneNode(true);
-                else if (LeadingImageCaptionRegex.test(text.className))
-                    originalCaption = text.cloneNode(true);
-            }
-        }
-        var image = this.leadingImage.cloneNode(false);
-        var attributes = image.attributes;
-        for (var i = 0; i < attributes.length; i++) {
-            var attributeName = attributes[i].nodeName;
-            if (!LeadingImageAttributeToKeepRegex.test(attributeName)) {
-                image.removeAttribute(attributeName);
-                i--;
-            }
-        }
-        image.className = image.width >= LeadingImageMinimumAbsoluteWidth ? "full-width" : null;
-        var container = this.contentDocument.createElement("div");
-        container.className = "leading-image";
-        container.appendChild(image);
-        if (originalCredit) {
-            var credit = this.newDivFromNode(originalCredit);
-            credit.className = "credit";
-            container.appendChild(credit);
-        }
-        if (originalCaption) {
-            var caption = this.newDivFromNode(originalCaption);
-            caption.className = "caption";
-            container.appendChild(caption);
-        }
-        return container;
-    },
-    adoptableArticle: function adoptableArticle(forceFindingArticle) {
-        if (this._adoptableArticle !== undefined) {
-            return this._adoptableArticle.cloneNode(true);
-        }
-        var rootElement = this.articleNode(forceFindingArticle);
-        this._adoptableArticle = rootElement ? rootElement.cloneNode(true) : null;
-        if (!this._adoptableArticle)
-            return this._adoptableArticle;
-        this._adoptableArticle = this.cleanArticleNode(rootElement, this._adoptableArticle, false)
-        var extraArticle = this.extraArticleNode();
-        if (extraArticle) {
-            var cleanedExtraNode = this.cleanArticleNode(extraArticle, extraArticle.cloneNode(true), true);
-            if (cleanedExtraNode) {
-                if (this.extraArticle.isPrepended)
-                    this._adoptableArticle.insertBefore(cleanedExtraNode, this._adoptableArticle.firstChild);
-                else
-                    this._adoptableArticle.appendChild(cleanedExtraNode);
-            }
-        }
-        this._articleTextContent = this._adoptableArticle.innerText;
-        var leadingImage = this.adoptableLeadingImage();
-        if (leadingImage)
-            this._adoptableArticle.insertBefore(leadingImage, this._adoptableArticle.firstChild);
-        return this._adoptableArticle;
-    },
-    cleanArticleNode: function cleanArticleNode(originalArticleNode, clonedArticleNode, allowedToReturnNull) {
-        const tagNamesToAlwaysPrune = {
-            "FORM": 1,
-            "IFRAME": 1,
-            "SCRIPT": 1,
-            "STYLE": 1,
-            "LINK": 1
-        };
-        const tagNamesToConsiderPruning = {
-            "DIV": 1,
-            "TABLE": 1,
-            "OBJECT": 1,
-            "UL": 1,
-            "CANVAS": 1
-        };
-        const tagNamesAffectingFontStyle = {
-            "I": 1,
-            "EM": 1
-        };
-        const tagNamesAffectingFontWeight = {
-            "B": 1,
-            "STRONG": 1,
-            "H1": 1,
-            "H2": 1,
-            "H3": 1,
-            "H4": 1,
-            "H5": 1,
-            "H6": 1
-        };
-        const MaximumFloatingContentRatio = 0.8;
-        var elementsToConsiderPruning = [];
-        var depthInFloat = 0;
-        var depthInTable = 0;
-        var depthInFontStyle = 0;
-        var depthInFontWeight = 0;
-        var currentElement = originalArticleNode;
-        var view = currentElement.ownerDocument.defaultView;
-        var currentCloneElement = clonedArticleNode;
-        var articleTitle = this.articleTitle();
-        var articleTitleElement = this._articleTitleElement;
-
-        function incrementDepthLevels(delta) {
-            if (depthInFloat)
-                depthInFloat += delta;
-            if (depthInTable)
-                depthInTable += delta;
-            if (depthInFontStyle)
-                depthInFontStyle += delta;
-            if (depthInFontWeight)
-                depthInFontWeight += delta;
-        };
-
-        function updateDepthLevelsAfterSiblingTraversal() {
-            if (depthInFloat === 1)
-                depthInFloat = 0;
-            if (depthInTable === 1)
-                depthInTable = 0;
-            if (depthInFontStyle === 1)
-                depthInFontStyle = 0;
-            if (depthInFontWeight === 1)
-                depthInFontWeight = 0;
-        };
-        var articleRect = cachedElementBoundingRect(originalArticleNode);
-        var articleArea = articleRect.width * articleRect.height;
-        var childFloatArea = 0;
-        var articleChildren = originalArticleNode.children;
-        for (var i = 0; i < articleChildren.length; i++) {
-            var child = articleChildren[i];
-            if (getComputedStyle(child).float === "none")
-                continue;
-            var childRect = cachedElementBoundingRect(child);
-            childFloatArea += childRect.width * childRect.height;
-        }
-        var mostOfDocumentIsFloat = childFloatArea / articleArea > MaximumFloatingContentRatio;
-        while (currentElement) {
-            var prunedElement = null;
-            var tagName = currentCloneElement.tagName;
-            currentCloneElement.originalElement = currentElement;
-            if (tagName in tagNamesToAlwaysPrune)
-                prunedElement = currentCloneElement;
-            if (!prunedElement && currentElement === articleTitleElement)
-                prunedElement = currentCloneElement;
-            if (!prunedElement && (tagName === "H1" || tagName === "H2")) {
-                var distanceFromoriginalArticleNodeTop = currentElement.offsetTop - originalArticleNode.offsetTop;
-                if (distanceFromoriginalArticleNodeTop < HeaderMinimumDistanceFromArticleTop) {
-                    var headerText = innerTextOrTextContent(currentElement);
-                    var maxDistanceToConsiderSimilar = headerText.length * HeaderLevenshteinDistanceToLengthRatio;
-                    if (levenshteinDistance(articleTitle, headerText) <= maxDistanceToConsiderSimilar)
-                        prunedElement = currentCloneElement;
-                }
-            }
-            if (!prunedElement) {
-                if (this.isMediaWikiPage() && currentElement.className === "editsection")
-                    prunedElement = currentCloneElement;
-            }
-            var computedStyle;
-            if (!prunedElement)
-                computedStyle = getComputedStyle(currentElement);
-            if (!prunedElement && tagName === "DIV" && currentCloneElement.parentNode) {
-                var elements = currentElement.querySelectorAll("a, blockquote, dl, div, img, ol, p, pre, table, ul");
-                var inFloat = depthInFloat || computedStyle["float"] !== "none";
-                if (!inFloat && !elements.length) {
-                    var parentNode = currentCloneElement.parentNode;
-                    var replacementNode = this.contentDocument.createElement("p");
-                    while (currentCloneElement.firstChild) {
-                        var child = currentCloneElement.firstChild;
-                        replacementNode.appendChild(child);
-                    }
-                    parentNode.replaceChild(replacementNode, currentCloneElement);
-                    currentCloneElement = replacementNode;
-                    currentCloneElement.originalElement = currentElement;
-                    tagName = currentCloneElement.tagName;
-                }
-            }
-            if (!prunedElement && currentCloneElement.parentNode && tagName in tagNamesToConsiderPruning)
-                elementsToConsiderPruning.push(currentCloneElement);
-            if (!prunedElement) {
-                if (computedStyle.display === "none" || computedStyle.visibility !== "visible")
-                    prunedElement = currentCloneElement;
-                else if (currentElement !== originalArticleNode && tagName !== "IMG" && !depthInFloat && computedStyle["float"] !== "none" && !mostOfDocumentIsFloat && (cachedElementBoundingRect(currentElement).height >= FloatMinimumHeight || currentElement.childElementCount > 1))
-                    depthInFloat = 1;
-            }
-            if (!prunedElement) {
-                var attributes = currentCloneElement.attributes;
-                for (var i = 0; i < attributes.length; i++) {
-                    var attributeName = attributes[i].nodeName;
-                    if (AttributesToRemoveRegEx.test(attributeName)) {
-                        currentCloneElement.removeAttribute(attributeName);
-                        i--;
-                    }
-                }
-                if (!depthInFontStyle && computedStyle.fontStyle !== "normal") {
-                    if (!(tagName in tagNamesAffectingFontStyle))
-                        currentCloneElement.style.fontStyle = computedStyle.fontStyle;
-                    depthInFontStyle = 1;
-                }
-                if (!depthInFontWeight && computedStyle.fontWeight !== "normal") {
-                    if (!(tagName in tagNamesAffectingFontWeight))
-                        currentCloneElement.style.fontWeight = computedStyle.fontWeight;
-                    depthInFontWeight = 1;
-                }
-                if (depthInFloat) {
-                    if (depthInFloat === 1) {
-                        if (cachedElementBoundingRect(currentElement).width === cachedElementBoundingRect(originalArticleNode).width)
-                            currentCloneElement.setAttribute("class", "float full-width");
-                        else
-                            currentCloneElement.setAttribute("class", "float " + computedStyle["float"]);
-                    }
-                    var widthValue = currentElement.style.getPropertyValue("width");
-                    if (widthValue)
-                        currentCloneElement.style.width = widthValue;
-                    else {
-                        var rules = view.getMatchedCSSRules(currentElement, "", true);
-                        if (rules) {
-                            for (var i = rules.length - 1; i >= 0; i--) {
-                                widthValue = rules[i].style.getPropertyValue("width");
-                                if (widthValue) {
-                                    currentCloneElement.style.width = widthValue;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    if (depthInFloat === 1 && !widthValue)
-                        currentCloneElement.style.width = cachedElementBoundingRect(currentElement).width + "px";
-                }
-                if (tagName === "TABLE") {
-                    if (!depthInTable)
-                        depthInTable = 1;
-                } else if (tagName === "IMG") {
-                    currentCloneElement.removeAttribute("border");
-                    currentCloneElement.removeAttribute("hspace");
-                    currentCloneElement.removeAttribute("vspace");
-                    currentCloneElement.removeAttribute("align");
-                    if (!depthInFloat) {
-                        var imageBoundingRect = cachedElementBoundingRect(currentElement);
-                        if (imageBoundingRect.width < ImageSizeTiny && imageBoundingRect.height < ImageSizeTiny)
-                            currentCloneElement.setAttribute("class", "reader-image-tiny");
-                        else if ((imageBoundingRect.width / cachedElementBoundingRect(originalArticleNode).width) > ImageWidthToParentWidthRatio) {
-                            currentCloneElement.setAttribute("class", "reader-image-large");
-                        }
-                    } else {
-                        currentCloneElement.style.float = computedStyle.float;
-                    }
-                } else if (tagName === "FONT") {
-                    currentCloneElement.removeAttribute("size");
-                    currentCloneElement.removeAttribute("face");
-                    currentCloneElement.removeAttribute("color");
-                } else if (tagName === "A" && currentCloneElement.parentNode) {
-                    var href = currentCloneElement.getAttribute("href");
-                    if (href && href.length && (href[0] === "#" || href.substring(0, 11) === "javascript:")) {
-                        if (!depthInTable && !currentCloneElement.childElementCount && currentCloneElement.parentElement.childElementCount === 1) {
-                            var xPathResult = this.contentDocument.evaluate("text()", currentCloneElement.parentElement, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-                            if (!xPathResult.snapshotLength)
-                                prunedElement = currentCloneElement;
-                        }
-                        if (!prunedElement) {
-                            var replacementNode = this.contentDocument.createElement("span");
-                            if (currentCloneElement.childElementCount === 1 && currentCloneElement.firstElementChild.tagName === "IMG") {
-                                var imageElement = currentCloneElement.firstElementChild;
-                                if (imageElement.width > AnchorImageMinimumWidth && imageElement.height > AnchorImageMinimumHeight)
-                                    replacementNode.setAttribute("class", "converted-image-anchor");
-                            }
-                            if (!replacementNode.className)
-                                replacementNode.setAttribute("class", "converted-anchor");
-                            while (currentCloneElement.firstChild)
-                                replacementNode.appendChild(currentCloneElement.firstChild);
-                            currentCloneElement.parentNode.replaceChild(replacementNode, currentCloneElement);
-                            currentCloneElement = replacementNode;
-                        }
-                    }
-                }
-            }
-            var firstElementChild = prunedElement ? null : currentElement.firstElementChild;
-            if (firstElementChild) {
-                currentElement = firstElementChild;
-                currentCloneElement = currentCloneElement.firstElementChild;
-                incrementDepthLevels(1);
-            } else {
-                var nextElementSibling;
-                while (currentElement !== originalArticleNode && !(nextElementSibling = currentElement.nextElementSibling)) {
-                    currentElement = currentElement.parentElement;
-                    currentCloneElement = currentCloneElement.parentElement;
-                    incrementDepthLevels(-1);
-                }
-                if (currentElement === originalArticleNode) {
-                    if (prunedElement) {
-                        if (prunedElement.parentElement)
-                            prunedElement.parentElement.removeChild(prunedElement);
-                        else if (allowedToReturnNull)
-                            return null;
-                    }
-                    break;
-                }
-                currentElement = nextElementSibling;
-                currentCloneElement = currentCloneElement.nextElementSibling;
-                updateDepthLevelsAfterSiblingTraversal();
-            }
-            if (prunedElement) {
-                if (prunedElement.parentElement)
-                    prunedElement.parentElement.removeChild(prunedElement);
-                else if (allowedToReturnNull)
-                    return null;
-            }
-        }
-        for (var i = elementsToConsiderPruning.length - 1; i >= 0; i--) {
-            var element = elementsToConsiderPruning[i];
-            if (element.parentNode && this.shouldPruneElement(element, element.originalElement))
-                element.parentNode.removeChild(element);
-        }
-        var floatElements = this._adoptableArticle.querySelectorAll(".float");
-        for (var i = 0; i < floatElements.length; i++) {
-            var pruneFloatedElement = false;
-            var floatElement = floatElements[i];
-            if (!pruneFloatedElement) {
-                var anchors = floatElement.querySelectorAll("a, span.converted-image-anchor");
-                var replacedAnchors = floatElement.querySelectorAll("span.converted-anchor");
-                pruneFloatedElement = floatElement.parentNode && replacedAnchors.length > anchors.length;
-            }
-            if (!pruneFloatedElement) {
-                var plugInsInClonedElement = floatElement.querySelectorAll("embed, object").length;
-                var plugInsInOriginalElement = floatElement.originalElement.querySelectorAll("embed, object").length;
-                if (!plugInsInClonedElement && plugInsInOriginalElement)
-                    pruneFloatedElement = true;
-            }
-            if (!pruneFloatedElement) {
-                var imagesInOriginalElement = floatElement.originalElement.querySelectorAll("img");
-                var visibleImagesInOriginalElementCount = 0;
-                for (var j = 0; j < imagesInOriginalElement.length; j++) {
-                    if (isElementVisible(imagesInOriginalElement[j]))
-                        visibleImagesInOriginalElementCount++;
-                    if (visibleImagesInOriginalElementCount > 1)
-                        break;
-                }
-                if (visibleImagesInOriginalElementCount === 1) {
-                    var imagesInClonedElementCount = floatElement.querySelectorAll("img").length;
-                    if (!imagesInClonedElementCount)
-                        pruneFloatedElement = true;
-                }
-            }
-            if (pruneFloatedElement)
-                floatElement.parentNode.removeChild(floatElement);
-        }
-        if (allowedToReturnNull && !removeWhitespace(clonedArticleNode.innerText).length)
-            return null;
-        return clonedArticleNode;
-    },
-    leadingImageNode: function leadingImageNode() {
-        const LeadingImageMinimumHeight = 250;
-        const LeadingImageMinimumWidthRatio = 0.5;
-        const LeadingImageNumberOfAncestorsToSearch = 3;
-        var searchScope = this.article.element;
-        for (var ancestorCount = 0; ancestorCount < LeadingImageNumberOfAncestorsToSearch; ancestorCount++) {
-            if (!searchScope.parentNode)
-                break;
-            searchScope = searchScope.parentNode;
-            var image = searchScope.getElementsByTagName("img")[0];
-            if (image) {
-                var imageRect = cachedElementBoundingRect(image);
-                if (imageRect.height >= LeadingImageMinimumHeight && imageRect.width >= this._articleWidth * LeadingImageMinimumWidthRatio) {
-                    var position = this.article.element.compareDocumentPosition(image);
-                    if (!(position & DocumentPositionPreceding) || (position & DocumentPositionContainedBy))
-                        continue;
-                    position = this.extraArticle ? this.extraArticle.element.compareDocumentPosition(image) : null;
-                    if (position && (!(position & DocumentPositionPreceding) || (position & DocumentPositionContainedBy)))
-                        continue;
-                    return image;
-                }
-            }
-        }
+};
+var lastMouseDownWasOutsideOfPaper = !1;
+ReaderController = function() {
+    this.pageNumber = 1, this.pageURLs = [], this.articleIsLTR = !0, this.loadingNextPage = !1, this.loadingNextPageManuallyStopped = !1, this.cachedNextPageURL = null, this.lastKnownUserVisibleWidth = 0, this.lastKnownDocumentElementWidth = 0, this._readerWillBecomeVisible = function() {}, this._readerWillEnterBackground = function() {}, this._distanceFromBottomOfArticleToStartLoadingNextPage = function() {
+        return NaN
+    }, this._shouldRestoreScrollPositionFromOriginalPageAtActivation = !1, this._clickingOutsideOfPaperRectangleDismissesReader = !1, this._shouldSkipActivationWhenPageLoads = function() {
+        return !1
+    }, this._shouldConvertRelativeURLsToAbsoluteURLsWhenPrintingOrMailing = !1, this._deferSendingContentIsReadyForDisplay = !1, this._isJavaScriptEnabled = function() {
+        return !0
+    }
+}, ReaderController.prototype = {
+setOriginalURL: function(e) {
+    this.originalURL = e, this.pageURLs.push(e), document.head.getElementsByTagName("base")[0].href = this.originalURL
+},
+setNextPageURL: function(e) {
+    if (!e || -1 !== this.pageURLs.indexOf(e) || this.pageNumber + 1 === MaxNumberOfNextPagesToLoad)
+        return void this.setLoadingNextPage(!1);
+    this.setLoadingNextPage(!0), this.pageURLs.push(e);
+    var t = function() {
+        nextPageContainer().addEventListener("load", nextPageLoadComplete, !1), nextPageContainer().src = e
+    };
+    this.readerOperationMode == ReaderOperationMode.OffscreenFetching ? t() : this.nextPageLoadTimer = setTimeout(t, LoadNextPageDelay)
+},
+pauseLoadingNextPage: function() {
+},
+stopLoadingNextPage: function() {
+    nextPageContainer().removeEventListener("load", nextPageLoadComplete, !1), nextPageContainer().src = null, this.nextPageLoadTimer && clearTimeout(this.nextPageLoadTimer), this.isLoadingNextPage() && (this.setLoadingNextPage(!1), this.loadingNextPageManuallyStopped = !0)
+},
+isLoadingNextPage: function() {
+    return this.loadingNextPage
+},
+setLoadingNextPage: function(e) {
+    this.loadingNextPage != e && (removeIncomingPagePlaceholder(), this.loadingNextPage = e)
+},
+doneLoadingAllPages: function() {
+},
+loaded: function() {
+    if (!ReaderArticleFinderJS || this._shouldSkipActivationWhenPageLoads())
         return null;
-    },
-    articleTitle: function articleTitle() {
-        if (this._articleTitle !== undefined)
-            return this._articleTitle;
-        const HeaderMaximumDistance = 500;
-        const HeaderMinimumTextLength = 8;
-        const HeaderMinimumFontSize = 12;
-        const HeaderFontSizeBonusMinimumRatio = 1.1;
-        const HeaderFontSizeBonusMultiplier = 1.25;
-        const HeaderBonusRegEx = /header|title|headline/i;
-        const HeaderRegexBonusMultiplier = 1.5;
-        const HeaderContentBonusMultiplier = 1.5;
-        const HeaderMaximumDOMDistance = 9;
-        const HeaderMinimumFontSizeDifference = 1.5;
+    if (this.loadArticle(), ReaderAppearanceJS.initialize(), ReadingPositionStabilizerJS.initialize(), this._shouldRestoreScrollPositionFromOriginalPageAtActivation) {
+        var e = 0;
+        if (e > 0)
+            document.body.scrollTop = e;
+        else {
+            var t = document.getElementById("safari-reader-element-marker");
+            if (t) {
+                var n = parseFloat(t.style.top) / 100,
+                i = t.parentElement,
+                a = i.getBoundingClientRect();
+                document.body.scrollTop = window.scrollY + a.top + a.height * n, i.removeChild(t)
+            }
+        }
+    }
+    this._clickingOutsideOfPaperRectangleDismissesReader && (document.documentElement.addEventListener("mousedown", monitorMouseDownForPotentialDeactivation), document.documentElement.addEventListener("click", deactivateIfEventIsOutsideOfPaperContainer));
+    var o = function() {
+        this.setUserVisibleWidth(this.lastKnownUserVisibleWidth)
+    }.bind(this);
+    window.addEventListener("resize", o, !1);
 
-        function isPrefixOrSuffix(headerText, documentTitle) {
-            var position = headerText ? documentTitle.indexOf(headerText) : -1;
-            return (position != -1 && (position == 0 || position + headerText.length == documentTitle.length));
-        }
-        var articleRect = cachedElementBoundingRect(this.articleNode());
-        if (this.extraArticleNode() && this.extraArticle.isPrepended)
-            articleRect = cachedElementBoundingRect(this.extraArticleNode());
-        var articleCenterX = articleRect.left + (articleRect.width / 2);
-        var articleTopY = articleRect.top;
-        var articleAdjustedTopY = articleTopY;
-        this._articleWidth = articleRect.width;
-        this.leadingImage = this.leadingImageNode();
-        if (this.leadingImage) {
-            var imageRect = cachedElementBoundingRect(this.leadingImage);
-            articleAdjustedTopY = imageRect.top;
-        }
-        var allHeaders = this.contentDocument.querySelectorAll("h1, h2, h3, h4, h5, .headline, .article_title, #hn-headline, .inside-head");
-        var bestHeader;
-        for (var i = 0; i < allHeaders.length; i++) {
-            var header = allHeaders[i];
-            var headerRect = cachedElementBoundingRect(header);
-            var headerCenterX = headerRect.left + (headerRect.width / 2);
-            var headerCenterY = headerRect.top + (headerRect.height / 2);
-            var deltaX = headerCenterX - articleCenterX;
-            var deltaY = headerCenterY - articleAdjustedTopY;
-            var distance = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
-            var headerScore = Math.max(HeaderMaximumDistance - distance, 0);
-            if (distance > HeaderMaximumDistance)
-                continue;
-            if (headerCenterX < articleRect.left || headerCenterX > articleRect.right)
-                continue;
-            var headerFontSize = fontSizeFromComputedStyle(getComputedStyle(header));
-            if (headerFontSize < HeaderMinimumFontSize)
-                continue;
-            var headerText = header.innerText;
-            if (isPrefixOrSuffix(headerText, this.contentDocument.title))
-                headerScore *= HeaderContentBonusMultiplier;
-            else if (headerText.length < HeaderMinimumTextLength)
-                continue;
-            headerScore *= 1 + TitleCandidateDepthScoreMultiplier * elementDepth(header);
-            headerScore *= (headerFontSize / BaseFontSize);
-            var fontSize = parseInt(this.contentTextStyle().fontSize);
-            if (parseInt(headerFontSize) > fontSize * HeaderFontSizeBonusMinimumRatio)
-                headerScore *= HeaderFontSizeBonusMultiplier;
-            if (HeaderBonusRegEx.test(header.className) || HeaderBonusRegEx.test(header.id))
-                headerScore *= HeaderRegexBonusMultiplier;
-            if (!bestHeader || headerScore > bestHeader.headerScore) {
-                bestHeader = header;
-                bestHeader.headerScore = headerScore;
-                bestHeader.headerText = headerText;
-            }
-        }
-        if (bestHeader && domDistance(bestHeader, this.articleNode(), HeaderMaximumDOMDistance + 1) > HeaderMaximumDOMDistance) {
-            if (parseInt(getComputedStyle(bestHeader).fontSize) < HeaderMinimumFontSizeDifference * fontSize)
-                bestHeader = null;
-        }
-        if (bestHeader) {
-            this._articleTitle = bestHeader.headerText.trim();
-            this._articleTitleElement = bestHeader;
-        }
-        if (!this._articleTitle)
-            this._articleTitle = this.contentDocument.title;
-        return this._articleTitle;
-    },
-    articleIsLTR: function articleIsLTR() {
-        if (this._articleIsLTR === undefined) {
-            var computedStyle = getComputedStyle(this.articleNode());
-            this._articleIsLTR = computedStyle ? computedStyle.direction === "ltr" : true;
-        }
-        return this._articleIsLTR;
-    },
-    findSuggestedCandidate: function findSuggestedCandidate() {
-        var route = this.suggestedRouteToArticle;
-        if (!route || !route.length)
-            return null;
-        var node;
-        var i;
-        for (i = route.length - 1; i >= 0; i--) {
-            if (route[i].id) {
-                node = this.contentDocument.getElementById(route[i].id);
-                if (node)
-                    break;
-            }
-        }
-        i++;
-        if (!node)
-            node = this.contentDocument;
-        while (i < route.length) {
-            var step = route[i];
-            var child = node.nodeType === Node.DOCUMENT_NODE ? node.documentElement : node.firstElementChild;
-            for (var j = 1; child && j < step.index; child = child.nextElementSibling) {
-                if (!this.shouldIgnoreInRouteComputation(child))
-                    j++;
-            }
-            if (!child)
-                return null;
-            if (child.tagName !== step.tagName)
-                return null;
-            if (step.className && child.className !== step.className)
-                return null;
-            node = child;
-            i++;
-        }
-        if (!isElementVisible(node))
-            return null;
-        return new CandidateElement(node, this.contentDocument);
-    },
-    findArticleTagCandidateElement: function findArticleTagCandidateElement() {
-        var articleTagElements = this.contentDocument.querySelectorAll("article");
-        if (articleTagElements.length != 1)
-            return null;
-        return CandidateElement.candidateIfElementIsViable(articleTagElements[0], this.contentDocument);
-    },
-    canRunReaderDetection: function () {
-        var hostname = this.contentDocument.location.hostname;
-        var pathname = this.contentDocument.location.pathname;
-        for (var hostString in BlacklistedHostsAllowedPathPrefixesMap) {
-            var hostRegex = new RegExp(hostString.escapeForRegExp());
-            if (!hostRegex.test(hostname))
-                continue;
-            var allowedPathPrefixes = BlacklistedHostsAllowedPathPrefixesMap[hostString];
-            for (var i = 0; i < allowedPathPrefixes.length; ++i) {
-                var pathPrefix = allowedPathPrefixes[i];
-                if (pathname.substring(0, pathPrefix.length) === pathPrefix)
-                    return true;
-            }
-            return false;
-        }
-        return true;
-    },
-    findArticle: function findArticle(forceFindingArticle) {
-        if (!this.canRunReaderDetection())
-            return null;
-        var suggestedCandidate = this.findSuggestedCandidate();
-        var candidateElements = this.findCandidateElements();
-        if (!candidateElements || !candidateElements.length)
-            return suggestedCandidate;
-        if (suggestedCandidate && suggestedCandidate.basicScore() >= ReaderMinimumScore)
-            return suggestedCandidate;
-        var articleTagElement = this.findArticleTagCandidateElement()
-        if (articleTagElement)
-            return articleTagElement;
-        var highestScoringElement = this.highestScoringCandidateFromCandidates(candidateElements);
-        if (highestScoringElement.element.tagName === "BLOCKQUOTE") {
-            var blockquoteParent = highestScoringElement.element.parentNode;
-            var numberOfCandidateElements = candidateElements.length;
-            for (var i = 0; i < numberOfCandidateElements; i++) {
-                var candidateElement = candidateElements[i];
-                if (candidateElement.element === blockquoteParent) {
-                    highestScoringElement = candidateElement;
-                    break;
-                }
-            }
-        }
-        if (suggestedCandidate && highestScoringElement.finalScore() < ReaderMinimumScore)
-            return suggestedCandidate;
-        if (highestScoringElement.shouldDisqualifyDueToScoreDensity()) {
-            var elements = highestScoringElement.element.querySelectorAll("ul", "li");
-            for (var i = 0; i < elements.length; i++) {
-                var prohibitedListElementChildren = elements[i].querySelectorAll("a", "div", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "table");
-                if (prohibitedListElementChildren.length > 0)
-                    continue;
-                var textNodes = highestScoringElement.usableTextNodesInElement(elements[i]);
-                if (!textNodes.length)
-                    continue;
-                for (var j = 0; j < textNodes.length; j++)
-                    highestScoringElement.textNodes.push(textNodes[j]);
-            }
-            highestScoringElement.rawScore = highestScoringElement.calculateRawScore();
-            if (!forceFindingArticle && highestScoringElement.shouldDisqualifyDueToScoreDensity())
-                return null;
-        }
-        if (!forceFindingArticle) {
-            if (highestScoringElement.shouldDisqualifyDueToHorizontalRuleDensity())
-                return null;
-            if (highestScoringElement.shouldDisqualifyDueToHeaderDensity())
-                return null;
-            if (highestScoringElement.shouldDisqualifyDueToSimilarElements(candidateElements))
-                return null;
-        }
-        return highestScoringElement;
-    },
-    findExtraArticle: function findExtraArticle() {
-        if (!this.article)
-            return null;
-        for (var i = 0, candidateSearchScope = this.article.element; i < 3 && candidateSearchScope; i++, candidateSearchScope = candidateSearchScope.parentNode) {
-            var candidateElements = this.findExtraArticleCandidateElements(candidateSearchScope);
-            if (!candidateElements || !candidateElements.length)
-                continue;
-            var sortedCandidateElements = this.sortCandidateElementsInDescendingScoreOrder(candidateElements);
-            var highestScoringCandidate;
-            for (var candidateIndex = 0; candidateIndex < sortedCandidateElements.length; candidateIndex++) {
-                highestScoringCandidate = sortedCandidateElements[candidateIndex];
-                if (!highestScoringCandidate || !highestScoringCandidate.basicScore())
-                    break;
-                if (highestScoringCandidate.shouldDisqualifyDueToScoreDensity())
-                    continue;
-                if (highestScoringCandidate.shouldDisqualifyDueToHorizontalRuleDensity())
-                    continue;
-                if (highestScoringCandidate.shouldDisqualifyDueToHeaderDensity())
-                    continue;
-                if (cachedElementBoundingRect(highestScoringCandidate.element).height < PrependedArticleCandidateMinimumHeight && cachedElementBoundingRect(this.article.element).width != cachedElementBoundingRect(highestScoringCandidate.element).width)
-                    continue;
-                var textNodeStyle = contentTextStyleForNode(this.contentDocument, highestScoringCandidate.element, true);
-                if (!textNodeStyle)
-                    continue;
-                if (textNodeStyle.fontFamily !== this.contentTextStyle().fontFamily || textNodeStyle.fontSize !== this.contentTextStyle().fontSize)
-                    continue;
-                if (highestScoringCandidate)
-                    return highestScoringCandidate;
-            }
-        }
+    var article_node = document.getElementById("article");
+    article_node.firstChild.remove();
+    
+    var message = { 'code' : 0 };
+    window.webkit.messageHandlers.JSController.postMessage(message);
+},
+setUserVisibleWidth: function(e) {
+    var t = ReaderAppearanceJS.documentElementWidth();
+    e === this.lastKnownUserVisibleWidth && t === this.lastKnownDocumentElementWidth || (this.lastKnownUserVisibleWidth = e, this.lastKnownDocumentElementWidth = t, ReaderAppearanceJS.applyAppropriateFontSize(), ReaderAppearanceJS.layOutContent())
+},
+loadArticle: function() {
+    var e = ReaderArticleFinderJS;
+    e.findArticle();
+    if (e.article || e.articleNode(!0), !e.article)
+        return this.setOriginalURL(e.contentDocument.baseURI), void this.doneLoadingAllPages();
+    this.routeToArticle = e.routeToArticleNode(), this.displayTitle = e.articleTitle(), this.displaySubhead = "", this.articleIsLTR = e.articleIsLTR();
+    var t = e.adoptableArticle().ownerDocument;
+    if (document.title = t.title, this.setOriginalURL(t.baseURI), this.readerOperationMode == ReaderOperationMode.ArchiveViewing)
+        return void ReaderAppearanceJS.layOutContent();
+    var n = e.adoptableArticle();
+    if (this._isJavaScriptEnabled()) {
+        var i = e.nextPageURL();
+        this.setNextPageURL(i)
+    } else {
+        for (var a = n.querySelectorAll("iframe"), o = a.length, r = 0; o > r; ++r)
+            a[r].remove();
+        this.stopLoadingNextPage()
+    }
+    this.updateLocaleFromElement(n), this.createPageFromNode(n), i
+},
+loadNewArticle: function() {
+    if (!ReaderArticleFinderJS)
         return null;
-    },
-    highestScoringCandidateFromCandidates: function highestScoringCandidateFromCandidates(candidateElements) {
-        var highestScore = 0;
-        var highestScoringElement = null;
-        for (var i = 0; i < candidateElements.length; i++) {
-            var candidateElement = candidateElements[i];
-            var score = candidateElement.basicScore();
-            if (score >= highestScore) {
-                highestScore = score;
-                highestScoringElement = candidateElement;
-            }
-        }
-        return highestScoringElement;
-    },
-    sortCandidateElementsInDescendingScoreOrder: function sortCandidateElementsInDescendingScoreOrder(candidateElements) {
-        function sortByScore(candidate1, candidate2) {
-            if (candidate1.basicScore() != candidate2.basicScore())
-                return candidate2.basicScore() - candidate1.basicScore();
-            return candidate2.depth() - candidate1.depth();
-        }
-        return candidateElements.sort(sortByScore);
-    },
-    findCandidateElements: function findCandidateElements() {
-        const MaximumCandidateDetectionTimeInterval = 1000;
-        var findCandidateElementsTimeoutDate = Date.now() + MaximumCandidateDetectionTimeInterval;
-        var elements = this.contentDocument.getElementsByTagName("*");
-        var candidateElements = [];
-        for (var i = 0; i < elements.length; i++) {
-            var element = elements[i];
-            if (shouldIgnoreElementBySelfOrAncestorTagName(element))
-                continue;
-            var candidate = CandidateElement.candidateIfElementIsViable(element, this.contentDocument);
-            if (candidate)
-                candidateElements.push(candidate);
-            if (Date.now() > findCandidateElementsTimeoutDate) {
-                console.assert(false, "ReaderArticleFinder aborting CandidateElement detection due to timeout");
-                candidateElements = [];
-                break;
-            }
-        }
-        for (var i = 0; i < candidateElements.length; i++)
-            candidateElements[i].element.candidateElement = candidateElements[i];
-        for (var i = 0; i < candidateElements.length; i++) {
-            var candidateElement = candidateElements[i];
-            if (candidateElement.element.tagName !== "BLOCKQUOTE")
-                continue;
-            var parentCandidateElement = candidateElement.element.parentElement.candidateElement;
-            if (!parentCandidateElement)
-                continue;
-            parentCandidateElement.addTextNodesFromCandidateElement(candidateElement);
-        }
-        for (var i = 0; i < candidateElements.length; i++)
-            candidateElements[i].element.candidateElement = null;
-        return candidateElements;
-    },
-    findExtraArticleCandidateElements: function findExtraArticleCandidateElements(searchScope) {
-        if (!this.article)
-            return [];
-        if (!searchScope)
-            searchScope = this.article.element;
-        var xPathQuery = "preceding-sibling::*/descendant-or-self::*";
-        var xPathResults = this.contentDocument.evaluate(xPathQuery, searchScope, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-        var possibleCandidateCount = xPathResults.snapshotLength;
-        var candidateElements = [];
-        for (var i = 0; i < possibleCandidateCount; i++) {
-            var element = xPathResults.snapshotItem(i);
-            if (shouldIgnoreElementBySelfOrAncestorTagName(element))
-                continue;
-            var candidate = CandidateElement.extraArticleCandidateIfElementIsViable(element, this.article, this.contentDocument, true);
-            if (candidate)
-                candidateElements.push(candidate);
-        }
-        xPathQuery = "following-sibling::*/descendant-or-self::*";
-        xPathResults = this.contentDocument.evaluate(xPathQuery, searchScope, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-        possibleCandidateCount = xPathResults.snapshotLength;
-        for (var i = 0; i < possibleCandidateCount; i++) {
-            var element = xPathResults.snapshotItem(i);
-            if (shouldIgnoreElementBySelfOrAncestorTagName(element))
-                continue;
-            var candidate = CandidateElement.extraArticleCandidateIfElementIsViable(element, this.article, this.contentDocument, false);
-            if (candidate)
-                candidateElements.push(candidate);
-        }
-        return candidateElements;
-    },
-    isGeneratedBy: function isGeneratedBy(pattern) {
-        var generatorMeta = this.contentDocument.head ? this.contentDocument.head.querySelector("meta[name=generator]") : null;
-        if (!generatorMeta)
-            return false;
-        var generator = generatorMeta.content;
-        if (!generator)
-            return false;
-        return pattern.test(generator);
-    },
-    isMediaWikiPage: function isMediaWikiPage() {
-        return this.isGeneratedBy(/^MediaWiki /);
-    },
-    isWordPressSite: function isWordPressSite() {
-        return this.isGeneratedBy(/^WordPress/);
-    },
-    nextPageURLString: function nextPageURLString() {
-        if (!this.article)
-            return null;
-        if (this.isMediaWikiPage())
-            return null;
-        var bestLink;
-        var bestLinkScore = 0;
-        var searchScope = this.article.element;
-        if (searchScope.parentNode && getComputedStyle(searchScope).display === "inline")
-            searchScope = searchScope.parentNode;
-        var possibleSearchScope = searchScope;
-        var minimumBottomOffset = cachedElementBoundingRect(searchScope).bottom + LinkMaxVerticalDistanceFromArticle;
-        while (isElementNode(possibleSearchScope) && cachedElementBoundingRect(possibleSearchScope).bottom <= minimumBottomOffset)
-            possibleSearchScope = possibleSearchScope.parentNode;
-        if (possibleSearchScope !== searchScope && (possibleSearchScope === this.contentDocument || isElementNode(possibleSearchScope)))
-            searchScope = possibleSearchScope;
-        var anchorElements = this.contentDocument.evaluate(LinkCandidateXPathQuery, searchScope, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-        var numberOfLinks = anchorElements.snapshotLength;
-        if (this.pageNumber <= 2 && !this.prefixWithDateForNextPageURL) {
-            var articleURL = this.contentDocument.location.pathname;
-            var dateMatch = articleURL.match(LinkDateRegex);
-            if (dateMatch) {
-                dateMatch = dateMatch[0];
-                this.prefixWithDateForNextPageURL = articleURL.substring(0, articleURL.indexOf(dateMatch) + dateMatch.length);
-            }
-        }
-        for (var i = 0; i < numberOfLinks; i++) {
-            var link = anchorElements.snapshotItem(i);
-            var score = this.scoreNextPageLinkCandidate(link);
-            if (score > bestLinkScore) {
-                bestLink = link;
-                bestLinkScore = score;
-            }
-        }
-        return bestLink ? bestLink.href : null;
-    },
-    scoreNextPageLinkCandidate: function scoreNextPageLinkCandidate(link) {
-        function isNextOrdinal(referenceString, linkString, linkText, pageNumber) {
-            if (linkString.substring(0, referenceString.length) === referenceString) {
-                linkString = linkString.substring(referenceString.length);
-                referenceString = "";
-            }
-            var linkOrdinal = linkString.lastInteger();
-            if (isNaN(linkOrdinal))
-                return false;
-            var referenceOrdinal = referenceString ? referenceString.lastInteger() : NaN;
-            if (isNaN(referenceOrdinal) || referenceOrdinal >= MaximumExactIntegralValue)
-                referenceOrdinal = pageNumber;
-            if (linkOrdinal == referenceOrdinal)
-                return linkText.lastInteger() === referenceOrdinal + 1;
-            return linkOrdinal === referenceOrdinal + 1;
-        }
-
-        function parametersFromSearch(search) {
-            var map = {};
-            var parameters = search.substring(1).split("&");
-            for (var i = 0; i < parameters.length; i++) {
-                var parameter = parameters[i];
-                var equalsIndex = parameter.indexOf("=");
-                if (equalsIndex === -1)
-                    map[parameter] = null;
-                else
-                    map[parameter.substring(0, equalsIndex)] = parameter.substring(equalsIndex + 1);
-            }
-            return map;
-        }
-        var referenceLocation = this.contentDocument.location;
-        if (link.host !== referenceLocation.host)
-            return 0;
-        if (link.pathname === referenceLocation.pathname && link.search === referenceLocation.search)
-            return 0;
-        if (link.toString().indexOf("#") != -1)
-            return 0;
-        if (!isElementVisible(link))
-            return 0;
-        var linkBoundingRect = cachedElementBoundingRect(link);
-        var articleBoundingRect = cachedElementBoundingRect(this.article.element);
-        var verticalDistanceFromArticle = Math.max(0, Math.max(articleBoundingRect.top - (linkBoundingRect.top + linkBoundingRect.height), linkBoundingRect.top - (articleBoundingRect.top + articleBoundingRect.height)));
-        if (linkBoundingRect.top < articleBoundingRect.top)
-            return 0;
-        if (verticalDistanceFromArticle > LinkMaxVerticalDistanceFromArticle)
-            return 0;
-        var horizontalDistanceFromArticle = Math.max(0, Math.max(articleBoundingRect.left - (linkBoundingRect.left + linkBoundingRect.width), linkBoundingRect.left - (articleBoundingRect.left + articleBoundingRect.width)));
-        if (horizontalDistanceFromArticle > 0)
-            return 0;
-        var referenceLocationPath = referenceLocation.pathname;
-        var linkPath = link.pathname;
-        if (this.prefixWithDateForNextPageURL) {
-            if (link.pathname.indexOf(this.prefixWithDateForNextPageURL) == -1)
-                return 0;
-            referenceLocationPath = referenceLocationPath.substring(this.prefixWithDateForNextPageURL.length);
-            linkPath = linkPath.substring(this.prefixWithDateForNextPageURL.length);
-        }
-        var linkPathComponents = linkPath.substring(1).split("/");
-        if (!linkPathComponents[linkPathComponents.length - 1])
-            linkPathComponents.pop();
-        var referencePathComponents = referenceLocationPath.substring(1).split("/");
-        var linkEndsWithSlash = false;
-        if (!referencePathComponents[referencePathComponents.length - 1]) {
-            linkEndsWithSlash = true;
-            referencePathComponents.pop();
-        }
-        if (linkPathComponents.length < referencePathComponents.length)
-            return 0;
-        var mismatchCount = 0;
-        var nextOrdinalMatchValue = 0;
-        var linkText = link.textContent;
-        for (var i = 0; i < linkPathComponents.length; i++) {
-            var linkComponent = linkPathComponents[i];
-            var referenceComponent = i < referencePathComponents.length ? referencePathComponents[i] : "";
-            if (referenceComponent !== linkComponent) {
-                if (i < referencePathComponents.length - 2)
-                    return 0;
-                if (linkComponent.length >= referenceComponent.length) {
-                    var commonSuffixLength = 0;
-                    while (linkComponent[linkComponent.length - 1 - commonSuffixLength] === referenceComponent[referenceComponent.length - 1 - commonSuffixLength])
-                        commonSuffixLength++;
-                    if (commonSuffixLength) {
-                        linkComponent = linkComponent.substring(0, linkComponent.length - commonSuffixLength);
-                        referenceComponent = referenceComponent.substring(0, referenceComponent.length - commonSuffixLength);
-                    }
-                }
-                if (isNextOrdinal(referenceComponent, linkComponent, linkText, this.pageNumber))
-                    nextOrdinalMatchValue = Math.pow(LinkNextOrdinalValueBase, (i - linkPathComponents.length + 1));
-                else
-                    mismatchCount++;
-            }
-            if (mismatchCount > 1)
-                return 0;
-        }
-        var didEarnURLSemanticBonus = false;
-        if (link.search) {
-            linkParameters = parametersFromSearch(link.search);
-            referenceParameters = parametersFromSearch(referenceLocation.search);
-            for (var key in linkParameters) {
-                var linkValue = linkParameters[key];
-                var referenceValue = key in referenceParameters ? referenceParameters[key] : null;
-                if (referenceValue !== linkValue) {
-                    if (referenceValue === null)
-                        referenceValue = "";
-                    if (linkValue === null)
-                        linkValue = "";
-                    if (linkValue.length < referenceValue.length)
-                        mismatchCount++;
-                    else if (isNextOrdinal(referenceValue, linkValue, linkText, this.pageNumber)) {
-                        if (LinkURLSearchParameterKeyMatchRegex.test(key)) {
-                            if (referenceLocationPath.toLowerCase() === linkPath.toLowerCase()) {
-                                if (this.isWordPressSite() && linkEndsWithSlash)
-                                    return 0;
-                                didEarnURLSemanticBonus = true;
-                            } else
-                                return 0;
-                        } else if (LinkURLBadSearchParameterKeyMatchRegex.test(key)) {
-                            mismatchCount++;
-                            continue;
-                        }
-                        nextOrdinalMatchValue = Math.max(nextOrdinalMatchValue, 1 / LinkNextOrdinalValueBase);
-                    } else
-                        mismatchCount++;
-                }
-            }
-        }
-        if (!nextOrdinalMatchValue)
-            return 0;
-        if (LinkURLPageSlashNumberMatchRegex.test(link.href) || LinkURLSlashDigitEndMatchRegex.test(link.href))
-            didEarnURLSemanticBonus = true;
-        if (!didEarnURLSemanticBonus && linkPathComponents.length == referencePathComponents.length && stringSimilarity(referenceLocationPath, linkPath) < LinkMinimumURLSimilarityRatio)
-            return 0;
-        if (LinkURLArchiveSlashDigitEndMatchRegex.test(link))
-            return 0;
-        var score = LinkMatchWeight * (Math.pow(LinkMismatchValueBase, -mismatchCount) + nextOrdinalMatchValue) + LinkVerticalDistanceFromArticleWeight * verticalDistanceFromArticle / LinkMaxVerticalDistanceFromArticle;
-        if (didEarnURLSemanticBonus)
-            score += LinkURLSemanticMatchBonus;
-        if (link.parentNode.tagName === "LI")
-            score += LinkListItemBonus;
-        var linkText = link.innerText;
-        if (LinkNextMatchRegEx.test(linkText))
-            score += LinkNextMatchBonus;
-        if (LinkPageMatchRegEx.test(linkText))
-            score += LinkPageMatchBonus;
-        if (LinkContinueMatchRegEx.test(linkText))
-            score += LinkContinueMatchBonus;
-        return score;
-    },
-    articleTextContent: function articleTextContent() {
-        return this._articleTextContent;
-    },
-    readingListItemInformation: function readingListItemInformation() {
-        const ReaderTitleMaxLength = 140;
-        const ReaderPreviewTextMaxLength = 140;
-        var title;
-        var previewText;
-        var isReaderAvailable = false;
-        if (this.adoptableArticle()) {
-            title = this.articleTitle();
-            previewText = this.articleTextContent();
-            isReaderAvailable = true;
-        } else {
-            title = this.contentDocument.title;
-            previewText = this.contentDocument.body.innerText;
-        }
-        if (!title)
-            title = this.contentDocument.location.href;
-        title = title.trim().substring(0, ReaderTitleMaxLength);
-        if (!previewText)
-            previewText = "";
-        previewText = previewText.trim().substring(0, ReaderPreviewTextMaxLength).replace(/[\s]+/g, ' ');
-        var info = {
-            "title": title,
-            "previewText": previewText,
-            "isReaderAvailable": isReaderAvailable
+    for (var e = document.getElementById("article"); e.childNodes.length >= 1;)
+        e.removeChild(e.firstChild);
+    this.reinitialize(), document.body.scrollTop = 0, this.loadArticle()
+},
+reinitialize: function() {
+    this.pageNumber = 1, this.pageURLs = [], this.articleIsLTR = !0, this.loadingNextPage = !1, this.loadingNextPageManuallyStopped = !1, this.routeToArticle = void 0, this.displayTitle = void 0, this.displaySubhead = void 0, this.originalURL = void 0, this.nextPageLoadTimer = void 0, this.cachedNextPageURL = null
+},
+createPageFromNode: function(e) {
+    var t = document.createElement("div");
+    t.className = "page", this.articleIsLTR || t.classList.add("rtl");
+    var n = document.createElement("div");
+    n.className = "page-number", t.appendChild(n);
+    var i = document.createElement("h1");
+    if (i.className = "title", i.textContent = this.displayTitle, t.appendChild(i), this.displaySubhead) {
+        var a = document.createElement("h2");
+        a.className = "subhead", a.textContent = this.displaySubhead, t.appendChild(a)
+    }
+    if (this.metadataElement && this.metadataElement.innerText) {
+        var o = document.createElement("div");
+        for (o.className = "metadata"; this.metadataElement.firstChild;)
+            o.appendChild(this.metadataElement.firstChild);
+        t.appendChild(o)
+    }
+    for (; e.firstChild;)
+        t.appendChild(e.firstChild);
+    var r = document.getElementById("article");
+    r.insertBefore(t, incomingPagePlaceholder()), replaceSimpleTweetsWithRichTweets(), ReaderAppearanceJS.layOutContent(ShouldRestoreReadingPosition.No), updatePageNumbers(), restoreInitialArticleScrollPositionIfPossible();
+    for (var s = t.querySelectorAll("img"), l = s.length, d = 0; l > d; ++d)
+        s[d].onload = function(e) {
+            var t = e.target;
+            ReaderAppearanceJS.setImageShouldLayOutBeyondTextColumnIfAppropriate(t, ReaderAppearanceJS.canLayOutContentMaintainingAspectRatioBeyondTextColumn()), t.onload = null
         };
-        return info;
+    this._fixImageElementsWithinPictureElements()
+},
+removeAttribute: function(e, t) {
+    for (var n = e.querySelectorAll("[" + t + "]"), i = n.length, a = 0; i > a; a++)
+        n[a].removeAttribute(t)
+        },
+preparePrintingMailingFrame: function() {
+    var e = this.printingMailingFrameElementId(),
+    t = document.getElementById(e);
+    t && document.body.removeChild(t), t = document.createElement("iframe"), t.id = e, t.style.display = "none", t.style.position = "absolute", document.body.appendChild(t);
+    var n = t.contentDocument,
+    i = document.createElement("base");
+    i.href = this.originalURL, n.head.appendChild(i);
+    var a = document.createElement("div");
+    a.className = "original-url";
+    var o = document.createElement("a");
+    o.href = this.originalURL, o.textContent = this.originalURL, a.appendChild(document.createElement("br")), a.appendChild(o), a.appendChild(document.createElement("br")), a.appendChild(document.createElement("br")), n.body.appendChild(a), n.body.appendChild(this.sanitizedFullArticle()), n.head.appendChild(document.getElementById("print").cloneNode(!0));
+    var r = n.createElement("title");
+    r.innerText = document.title, n.head.appendChild(r)
+},
+sanitizedFullArticle: function() {
+    var e = document.getElementById("article").cloneNode(!0);
+    e.removeAttribute("tabindex");
+    for (var t = e.querySelectorAll(".title"), n = 1; n < t.length; ++n)
+        t[n].remove();
+    for (var i = e.querySelectorAll(".page-number, #incoming-page-placeholder"), n = 0; n < i.length; ++n)
+        i[n].remove();
+    if (prepareTweetsInPrintingMailingFrame(e), this._shouldConvertRelativeURLsToAbsoluteURLsWhenPrintingOrMailing) {
+        var a = e.querySelectorAll("img, video, audio, source");
+        const o = /^http:\/\/|^https:\/\/|^data:/i;
+        for (var n = 0; n < a.length; n++) {
+            var r = a[n],
+            s = r.getAttribute("src");
+            o.test(s) || r.setAttribute("src", r.src)
+        }
+    }
+    for (var l = e.querySelectorAll(".extendsBeyondTextColumn"), d = l.length, n = 0; d > n; ++n)
+        stopExtendingElementBeyondTextColumn(l[n]);
+    for (var c = e.querySelectorAll(".delimeter"), u = c.length, n = 0; u > n; ++n)
+        c[n].innerText = "\u2022";
+    e.classList.add(ReaderAppearanceJS.currentFontCSSClassName()), e.classList.add("exported");
+    for (var m = document.getElementById("article-content").sheet.cssRules, g = m.length, h = 0; g > h; ++h) {
+        var p = m[h].selectorText,
+        f = m[h].style;
+        if (f) {
+            var S = f.cssText;
+            e.matches(p) && (e.style.cssText += S);
+            for (var C = e.querySelectorAll(p), x = C.length, v = 0; x > v; ++v)
+                C[v].style.cssText += S
+                }
+    }
+    return e
+},
+printingMailingFrameElementId: function() {
+    return "printing-mailing-frame"
+},
+updateLocaleFromElement: function(e) {
+    this._bestLocale = localeForElement(e), document.getElementById("article").style.webkitLocale = "'" + this._bestLocale + "'"
+},
+canLoadNextPage: function() {
+    if (this.readerOperationMode != ReaderOperationMode.Normal)
+        return !0;
+    var e = document.querySelectorAll(".page"),
+    t = e[e.length - 1],
+    n = t.getBoundingClientRect(),
+    i = this._distanceFromBottomOfArticleToStartLoadingNextPage();
+    return isNaN(i) ? !0 : !(n.bottom - window.scrollY > i)
+},
+setCachedNextPageURL: function(e) {
+    e ? null : this.setNextPageURL(e)
+},
+loadNextPage: function() {
+    null != this.cachedNextPageURL && (this.setNextPageURL(this.cachedNextPageURL), this.cachedNextPageURL = null )
+},
+resumeCachedNextPageLoadIfNecessary: function() {
+    ReaderJS.cachedNextPageURL && ReaderJS.canLoadNextPage() && ReaderJS.loadNextPage()
+},
+readerWillBecomeVisible: function() {
+    document.body.classList.remove("cached"), this.resumeCachedNextPageLoadIfNecessary(), this._readerWillBecomeVisible()
+},
+readerWillEnterBackground: function() {
+    (ReaderJS.isLoadingNextPage() || ReaderJS.loadingNextPageManuallyStopped) && this.pauseLoadingNextPage();
+    for (var e = document.querySelectorAll("audio, video"), t = 0, n = e.length; n > t; ++t)
+        e[t].pause();
+    document.body.classList.add("cached"), this._readerWillEnterBackground()
+},
+_fixImageElementsWithinPictureElements: function() {
+    setTimeout(function() {
+               for (var e = !1, t = document.querySelectorAll("#article picture img"), n = t.length, i = 0; n > i; ++i) {
+               var a = t[i],
+               o = a.previousElementSibling;
+               o && (a.remove(), o.after(a), e = !0)
+               }
+               e && ReaderAppearanceJS.layOutContent()
+               }, 0)
+}
+}, ReadingPositionStabilizer = function() {
+    this.elementTouchingTopOfViewport = null, this.elementTouchingTopOfViewportOffsetFromTopOfElementRatio = 0
+}, ReadingPositionStabilizer.prototype = {
+initialize: function() {
+    this.setTrackPosition(!0)
+},
+setTrackPosition: function(e) {
+    this._positionUpdateFunction || (this._positionUpdateFunction = this._updatePosition.bind(this)), e ? window.addEventListener("scroll", this._positionUpdateFunction, !1) : window.removeEventListener("scroll", this._positionUpdateFunction, !1)
+},
+_updatePosition: function() {
+    var e = contentElementTouchingTopOfViewport();
+    if (!e)
+        return void (this.elementTouchingTopOfViewport = null);
+    this.elementTouchingTopOfViewport = e;
+    var t = this.elementTouchingTopOfViewport.getBoundingClientRect();
+    this.elementTouchingTopOfViewportOffsetFromTopOfElementRatio = t.height > 0 ? t.top / t.height : 0
+},
+restorePosition: function() {
+    if (this.elementTouchingTopOfViewport) {
+        var e = this.elementTouchingTopOfViewport.getBoundingClientRect(),
+        t = document.body.scrollTop + e.top - e.height * this.elementTouchingTopOfViewportOffsetFromTopOfElementRatio;
+        t > 0 && (document.body.scrollTop = t), this._updatePosition()
     }
 }
-var ReaderArticleFinderJS = new ReaderArticleFinder(document);
+};
+var ContentAwareScrollerJS = new ContentAwareScroller,
+ReaderAppearanceJS = new ReaderAppearanceController,
+ReadingPositionStabilizerJS = new ReadingPositionStabilizer,
+ReaderJS = new ReaderController;
