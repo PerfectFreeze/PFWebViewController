@@ -17,19 +17,17 @@
 
 ### Loading
 
-![Loading](Screenshots/Loading.png)
+<img src="Screenshots/Loading.png" alt="Loading" width="250" style="display:inline;">
 
 ### Main Screen
 
-![Main Screen](Screenshots/GitHub_1.png)
-
-![Main Screen](Screenshots/GitHub_2.png)
+<img src="Screenshots/GitHub_1.png" alt="Main Screen" width="250" style="display:inline;">
+<img src="Screenshots/GitHub_2.png" alt="Main Screen" width="250" style="display:inline;">
 
 ### Reader Mode
 
-![Reader Mode Off](Screenshots/Reader_Mode_1.png)
-
-![Reader Mode On](Screenshots/Reader_Mode_2.png)
+<img src="Screenshots/Reader_Mode_1.png" alt="Reader Mode Off" width="250" style="display:inline;">
+<img src="Screenshots/Reader_Mode_2.png" alt="Reader Mode On" width="250" style="display:inline;">
 
 ## Installation
 
@@ -50,7 +48,7 @@ Add `PFWebViewController.framework` to your Xcode project.
 Add `PFWebViewController` to your `Podfile`:
 
 ```ruby
-pod 'PFWebViewController', '~> 1.1'
+pod 'PFWebViewController', '~> 1.1.1'
 ```
 
 Run `pod install` to install this framework.
@@ -78,6 +76,9 @@ PFWebViewController *webVC = [[PFWebViewController alloc] initWithURL:url];
 // Or push in a navigationController
 [self.navigationController pushViewController:webVC animated:YES];
 ```
+## Further Reading
+
+- [How to implement Safari-like reader mode in PFWebViewController](http://sergiochan.xyz/2016/10/21/%E5%A6%82%E4%BD%95%E5%9C%A8-WKWebView-%E4%B8%AD%E5%AE%9E%E7%8E%B0-Safari-%E5%8E%9F%E7%94%9F%E7%9A%84%E9%98%85%E8%AF%BB%E6%A8%A1%E5%BC%8F/)
 
 ## License
 
