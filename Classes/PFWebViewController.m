@@ -387,6 +387,16 @@
 }
 
 - (void)webView:(WKWebView *)webView didFinishNavigation:(null_unspecified WKNavigation *)navigation {
+    if (webView == _webView) {
+        // Set reader mode button status when navigation finished
+        [webView evaluateJavaScript:@"var ReaderArticleFinderJS = new ReaderArticleFinder(document); ReaderArticleFinderJS.isReaderModeAvailable();" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
+            if ([object integerValue] == 1) {
+                self.toolbar.readerModeBtn.enabled = YES;
+            } else {
+                self.toolbar.readerModeBtn.enabled = NO;
+            }
+        }];
+    }
 }
 
 // 拦截非 Http:// 和 Https:// 开头的请求，转成应用内跳转
@@ -418,23 +428,6 @@
 }
 
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler {
-    if ([webView isEqual:self.readerWebView]) {
-        decisionHandler(WKNavigationResponsePolicyAllow);
-        return;
-    }
-    
-    // Set reader mode button status when navigation finished
-    [_webView evaluateJavaScript:@"var ReaderArticleFinderJS = new ReaderArticleFinder(document);" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
-    }];
-    
-    [_webView evaluateJavaScript:@"ReaderArticleFinderJS.isReaderModeAvailable();" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
-        if ([object integerValue] == 1) {
-            self.toolbar.readerModeBtn.enabled = YES;
-        } else {
-            self.toolbar.readerModeBtn.enabled = NO;
-        }
-    }];
-    
     decisionHandler(WKNavigationResponsePolicyAllow);
 }
 
