@@ -307,11 +307,9 @@
 - (void)webViewToolbarDidSwitchReaderMode:(PFWebViewToolBar *)toolbar {
     isReaderMode = !isReaderMode;
     if (isReaderMode) {
-        [_webView evaluateJavaScript:@"var ReaderArticleFinderJS = new ReaderArticleFinder(document);" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
-        }];
-        [_webView evaluateJavaScript:@"var article = ReaderArticleFinderJS.findArticle();" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
-        }];
-        [_webView evaluateJavaScript:@"article.element.outerHTML" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
+        [_webView evaluateJavaScript:
+          @"var ReaderArticleFinderJS = new ReaderArticleFinder(document);"
+          "var article = ReaderArticleFinderJS.findArticle(); article.element.outerHTML" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
             if ([object isKindOfClass:[NSString class]] && isReaderMode) {
                 [_webView evaluateJavaScript:@"ReaderArticleFinderJS.articleTitle()" completionHandler:^(id _Nullable object_in, NSError * _Nullable error) {
                     readerArticleTitle = object_in;
@@ -328,10 +326,10 @@
                     
                     [_readerWebView loadHTMLString:mut_str baseURL:self.url];
                     _readerWebView.alpha = 0.0f;
+
+                    [_webView evaluateJavaScript:@"ReaderArticleFinderJS.prepareToTransitionToReader();" completionHandler:^(id _Nullable object, NSError * _Nullable error) {}];
                 }];
             }
-        }];
-        [_webView evaluateJavaScript:@"ReaderArticleFinderJS.prepareToTransitionToReader();" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
         }];
     } else {
         [UIView animateWithDuration:0.2f animations:^{
