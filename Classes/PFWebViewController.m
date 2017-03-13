@@ -307,11 +307,9 @@
 - (void)webViewToolbarDidSwitchReaderMode:(PFWebViewToolBar *)toolbar {
     isReaderMode = !isReaderMode;
     if (isReaderMode) {
-        [_webView evaluateJavaScript:@"var ReaderArticleFinderJS = new ReaderArticleFinder(document);" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
-        }];
-        [_webView evaluateJavaScript:@"var article = ReaderArticleFinderJS.findArticle();" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
-        }];
-        [_webView evaluateJavaScript:@"article.element.outerHTML" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
+        [_webView evaluateJavaScript:
+          @"var ReaderArticleFinderJS = new ReaderArticleFinder(document);"
+          "var article = ReaderArticleFinderJS.findArticle(); article.element.outerHTML" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
             if ([object isKindOfClass:[NSString class]] && isReaderMode) {
                 [_webView evaluateJavaScript:@"ReaderArticleFinderJS.articleTitle()" completionHandler:^(id _Nullable object_in, NSError * _Nullable error) {
                     readerArticleTitle = object_in;
@@ -328,10 +326,10 @@
                     
                     [_readerWebView loadHTMLString:mut_str baseURL:self.url];
                     _readerWebView.alpha = 0.0f;
+
+                    [_webView evaluateJavaScript:@"ReaderArticleFinderJS.prepareToTransitionToReader();" completionHandler:^(id _Nullable object, NSError * _Nullable error) {}];
                 }];
             }
-        }];
-        [_webView evaluateJavaScript:@"ReaderArticleFinderJS.prepareToTransitionToReader();" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
         }];
     } else {
         [UIView animateWithDuration:0.2f animations:^{
@@ -387,6 +385,16 @@
 }
 
 - (void)webView:(WKWebView *)webView didFinishNavigation:(null_unspecified WKNavigation *)navigation {
+    if (webView == _webView) {
+        // Set reader mode button status when navigation finished
+        [webView evaluateJavaScript:@"var ReaderArticleFinderJS = new ReaderArticleFinder(document); ReaderArticleFinderJS.isReaderModeAvailable();" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
+            if ([object integerValue] == 1) {
+                self.toolbar.readerModeBtn.enabled = YES;
+            } else {
+                self.toolbar.readerModeBtn.enabled = NO;
+            }
+        }];
+    }
 }
 
 // 拦截非 Http:// 和 Https:// 开头的请求，转成应用内跳转
@@ -418,23 +426,6 @@
 }
 
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler {
-    if ([webView isEqual:self.readerWebView]) {
-        decisionHandler(WKNavigationResponsePolicyAllow);
-        return;
-    }
-    
-    // Set reader mode button status when navigation finished
-    [_webView evaluateJavaScript:@"var ReaderArticleFinderJS = new ReaderArticleFinder(document);" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
-    }];
-    
-    [_webView evaluateJavaScript:@"ReaderArticleFinderJS.isReaderModeAvailable();" completionHandler:^(id _Nullable object, NSError * _Nullable error) {
-        if ([object integerValue] == 1) {
-            self.toolbar.readerModeBtn.enabled = YES;
-        } else {
-            self.toolbar.readerModeBtn.enabled = NO;
-        }
-    }];
-    
     decisionHandler(WKNavigationResponsePolicyAllow);
 }
 
